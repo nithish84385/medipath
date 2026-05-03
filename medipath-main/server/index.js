@@ -1,80 +1,120 @@
 import express from 'express';
+import ngrok from '@ngrok/ngrok';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import twilio from 'twilio';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import cron from 'node-cron';
+import { handleWhatsAppMessage } from './whatsappAgent.js';
+import { getSession, saveSession, readDB, writeDB } from './localDb.js';
 
-// Load environment variables from the parent root folder
+// Load environment variables
 dotenv.config({ path: path.resolve(process.cwd(), '../.env') });
 
 const app = express();
-// Twilio sends webhooks as application/x-www-form-urlencoded
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cors());
 
-// Initialize Gemini (using your existing VITE_GEMINI_API_KEY)
-const genAI = new GoogleGenerativeAI(process.env.VITE_GEMINI_API_KEY || 'PLACEHOLDER');
-// We will use gemini-pro for text
-const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'Server is running', multimodal: 'enabled' });
+  res.status(200).json({ status: 'MediPath WhatsApp Agent is Active' });
 });
 
-// Main WhatsApp Webhook
+// WhatsApp Webhook
 app.post('/api/whatsapp', async (req, res) => {
   try {
-    const { Body, From, NumMedia, MediaUrl0, MediaContentType0, To } = req.body;
-    console.log(`Received message from ${From}: ${Body}`);
+    const { Body, From, To, NumMedia, MediaUrl0, MediaContentType0 } = req.body;
+    console.log(`[WhatsApp] Message from ${From}: ${Body || '[Media]'}`);
 
-    // IMMEDIATELY acknowledge the webhook to prevent Twilio timeout (15 seconds)
+    // Ack Twilio immediately
     res.status(200).end();
 
-    let aiResponseText = "";
+    // 1. Get or Create Session
+    let sessionData = await getSession(From);
 
-    // Check if media was sent (Image, Audio, etc)
-    if (NumMedia && parseInt(NumMedia) > 0) {
-      console.log(`Received Media: ${MediaUrl0} of type ${MediaContentType0}`);
-      aiResponseText = `I received your media (${MediaContentType0}). Processing reports/audio will be implemented soon!`;
-    } else {
-      // It's a text message, let's pass it to Gemini
-      const prompt = `
-        You are Medipath's AI WhatsApp Assistant. A patient sent this message: "${Body}".
-        Identify their intent: 1) reporting symptoms 2) asking for a reminder 3) general health question.
-        Reply in the language they used. Keep it brief and friendly.
-      `;
-      
-      try {
-        if (process.env.VITE_GEMINI_API_KEY) {
-          const result = await model.generateContent(prompt);
-          aiResponseText = result.response.text();
-        } else {
-          aiResponseText = "I received your message! (Add VITE_GEMINI_API_KEY to test AI responses)";
-        }
-      } catch (e) {
-        console.error("Gemini Error:", e);
-        aiResponseText = "Sorry, I am having trouble connecting to my AI brain right now.";
+    // 2. Process message through Agent
+    const mediaData = NumMedia > 0 ? { url: MediaUrl0, type: MediaContentType0 } : null;
+    const response = await handleWhatsAppMessage(From, Body, mediaData);
+
+    // 3. Update History
+    sessionData = await getSession(From); // Reload to get updates made by agent
+    if (!sessionData) {
+      sessionData = { from: From, history: [], lastActive: new Date().toISOString() };
+    }
+    
+    sessionData.history.push({ 
+      role: 'user', 
+      content: Body || `[Media: ${MediaContentType0}]`, 
+      timestamp: new Date().toISOString() 
+    });
+    sessionData.lastActive = new Date().toISOString();
+    
+    await saveSession(From, sessionData);
+
+    // 4. Send Response via Twilio
+    await twilioClient.messages.create({
+      body: response,
+      from: To,
+      to: From
+    });
+
+  } catch (error) {
+    console.error('Webhook Error:', error);
+  }
+});
+
+// Medicine Reminder System (Runs every minute)
+cron.schedule('* * * * *', async () => {
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+  
+  try {
+    const db = await readDB();
+    let updated = false;
+
+    for (let i = 0; i < db.reminders.length; i++) {
+      const reminder = db.reminders[i];
+      if (reminder.time === timeStr && !reminder.sent) {
+        console.log(`Sending reminder to ${reminder.phone}: ${reminder.medicine}`);
+        
+        await twilioClient.messages.create({
+          body: `🔔 *Medication Reminder*\n\nHi! It's time to take your *${reminder.medicine}*. \n\nStay healthy! ❤️`,
+          from: `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER}`,
+          to: reminder.phone
+        });
+
+        db.reminders[i].sent = true;
+        updated = true;
       }
     }
 
-    // Send the actual message asynchronously using the Twilio client
-    const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-    await client.messages.create({
-      body: aiResponseText,
-      from: To, // This is the Twilio number (+14155238886)
-      to: From  // This is the user's WhatsApp number
-    });
-    console.log("Response sent to user asynchronously.");
-
-  } catch (error) {
-    console.error('Webhook error:', error);
+    if (updated) {
+      await writeDB(db);
+    }
+  } catch (e) {
+    console.error('Cron Error:', e);
   }
 });
 
 const PORT = process.env.PORT || 3001;
+
+async function startTunnel() {
+  try {
+    const listener = await ngrok.forward({
+      addr: PORT,
+      authtoken: process.env.NGROK_AUTHTOKEN,
+    });
+    const url = listener.url();
+    console.log(`\x1b[36m%s\x1b[0m`, `\n🌐 TUNNEL LIVE! Paste this into Twilio:\n👉  ${url}/api/whatsapp\n`);
+  } catch(e) {
+    console.error('ngrok error:', e.message);
+    console.log('\n⚠️  Add NGROK_AUTHTOKEN to .env file (free at ngrok.com)\n');
+  }
+}
+
 app.listen(PORT, () => {
-  console.log(`WhatsApp Agent Server running on port ${PORT}`);
-  console.log(`Waiting for Twilio Webhooks on http://localhost:${PORT}/api/whatsapp`);
+  console.log(`\x1b[32m%s\x1b[0m`, `🚀 MediPath WhatsApp Agent running on port ${PORT}`);
+  startTunnel();
 });
