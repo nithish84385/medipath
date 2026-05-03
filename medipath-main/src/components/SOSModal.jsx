@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AlertTriangle, Phone, X, Loader2 } from 'lucide-react';
 import { db } from '../lib/firebase';
-import { addDoc, collection } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc } from 'firebase/firestore';
 
 export default function SOSModal({ user, onClose, prescriptionData }) {
   const [sending, setSending] = useState(false);
@@ -16,19 +16,15 @@ export default function SOSModal({ user, onClose, prescriptionData }) {
 
   const [emergencyData, setEmergencyData] = useState(null);
 
-  import('react').then(({ useEffect }) => {
-    useEffect(() => {
-      if (user?.uid) {
-        import('firebase/firestore').then(({ doc, getDoc }) => {
-          getDoc(doc(db, 'users', user.uid)).then(snap => {
-            if (snap.exists() && snap.data().emergencyPhone) {
-              setEmergencyData({ name: snap.data().emergencyContact, phone: snap.data().emergencyPhone });
-            }
-          }).catch(console.error);
-        });
-      }
-    }, [user]);
-  });
+  useEffect(() => {
+    if (user?.uid) {
+      getDoc(doc(db, 'users', user.uid)).then(snap => {
+        if (snap.exists() && snap.data().emergencyPhone) {
+          setEmergencyData({ name: snap.data().emergencyContact, phone: snap.data().emergencyPhone });
+        }
+      }).catch(console.error);
+    }
+  }, [user?.uid]);
 
   const handleSendSOS = async () => {
     setSending(true);
