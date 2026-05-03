@@ -89,7 +89,7 @@ export default function HealthHistory({ user, onLogout }) {
           <div className="relative">
             <input 
               type="file" 
-              accept="image/*" 
+              accept="image/*,application/pdf" 
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               onChange={handleFileUpload}
               disabled={isScanning}

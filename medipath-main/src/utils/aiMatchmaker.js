@@ -107,10 +107,38 @@ export async function aiMatchDoctors(selectedSymptoms, customSymptom = "", userC
       };
     }).sort((a, b) => b.score - a.score);
 
+    if (matched.length === 0) {
+      throw new Error("AI returned empty array, triggering local fallback.");
+    }
+
     return matched;
 
   } catch (error) {
-    console.error("Gemini Match Error, falling back to basic algo", error);
-    return []; // A proper fallback could be used here
+    console.warn("Gemini Match Error, falling back to local database algorithms", error);
+    // Robust Fallback Algorithm
+    const matchTerms = [...selectedSymptoms, customSymptom].join(' ').toLowerCase();
+    
+    const fallbackMatches = doctorsDB.map(doc => {
+      let score = 50; // Base score
+      
+      // Match specialty
+      if (matchTerms.includes(doc.specialty.toLowerCase())) score += 30;
+      
+      // Match city
+      if (userCity && doc.city.toLowerCase() === userCity.toLowerCase()) score += 15;
+      
+      // Add random fuzziness (0-5)
+      score += Math.floor(Math.random() * 5);
+      
+      return {
+        ...doc,
+        score: Math.min(score, 98), // Cap at 98
+        bio: `${doc.name} is a highly rated ${doc.specialty} based in ${doc.city}.`,
+        available: true,
+      };
+    });
+
+    // Sort by score and take top 3
+    return fallbackMatches.sort((a, b) => b.score - a.score).slice(0, 3);
   }
 }

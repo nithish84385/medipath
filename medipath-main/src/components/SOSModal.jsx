@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AlertTriangle, Phone, X, Loader2 } from 'lucide-react';
 import { db } from '../lib/firebase';
-import { addDoc, collection } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc } from 'firebase/firestore';
 
 export default function SOSModal({ user, onClose, prescriptionData }) {
   const [sending, setSending] = useState(false);
@@ -13,6 +13,18 @@ export default function SOSModal({ user, onClose, prescriptionData }) {
     { label: '119', country: 'Bangladesh' },
     { label: '1990', country: 'Sri Lanka' },
   ];
+
+  const [emergencyData, setEmergencyData] = useState(null);
+
+  useEffect(() => {
+    if (user?.uid) {
+      getDoc(doc(db, 'users', user.uid)).then(snap => {
+        if (snap.exists() && snap.data().emergencyPhone) {
+          setEmergencyData({ name: snap.data().emergencyContact, phone: snap.data().emergencyPhone });
+        }
+      }).catch(console.error);
+    }
+  }, [user?.uid]);
 
   const handleSendSOS = async () => {
     setSending(true);
@@ -40,7 +52,7 @@ export default function SOSModal({ user, onClose, prescriptionData }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content fade-in" onClick={e => e.stopPropagation()}
-        style={{ border: '2px solid var(--danger)', textAlign: 'center' }}>
+        style={{ border: '2px solid var(--danger)', textAlign: 'center', maxHeight: '90vh', overflowY: 'auto' }}>
 
         <div className="flex items-center justify-center mb-4">
           <div className="w-16 h-16 rounded-full flex items-center justify-center"
@@ -64,7 +76,7 @@ export default function SOSModal({ user, onClose, prescriptionData }) {
           <div className="text-xs font-semibold mb-3" style={{ color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
             Emergency Helplines
           </div>
-          <div className="flex flex-wrap justify-center gap-4">
+          <div className="flex flex-wrap justify-center gap-4 mb-4">
             {helplines.map(h => (
               <a key={h.label} href={`tel:${h.label}`} className="flex items-center gap-2 hover:opacity-70 transition-opacity">
                 <Phone size={14} color="var(--danger)" />
@@ -73,6 +85,15 @@ export default function SOSModal({ user, onClose, prescriptionData }) {
               </a>
             ))}
           </div>
+
+          {emergencyData && (
+             <div className="mt-3 p-3 rounded-xl border border-red-200 bg-red-50 text-left">
+               <div className="text-[10px] font-bold text-red-800 uppercase mb-2 tracking-wider">Personal Emergency Contact</div>
+               <a href={`tel:${emergencyData.phone}`} className="flex items-center justify-between w-full btn bg-white border border-red-200 shadow-sm text-red-600 hover:bg-red-100">
+                 <div className="flex items-center gap-2 font-bold"><Phone size={14} /> Call {emergencyData.name || 'Emergency Contact'}</div>
+               </a>
+             </div>
+          )}
         </div>
 
         {!sent ? (

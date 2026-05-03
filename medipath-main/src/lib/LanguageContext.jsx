@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { genAI } from './gemini';
 
 const LanguageContext = createContext();
@@ -36,4 +36,23 @@ export function LanguageProvider({ children }) {
       {children}
     </LanguageContext.Provider>
   );
+}
+
+export function Translate({ children }) {
+  const { language, translate } = useLanguage();
+  const [text, setText] = useState(children);
+
+  useEffect(() => {
+    let mounted = true;
+    if (typeof children === 'string' && language !== 'English') {
+      translate(children, language).then(res => {
+        if (mounted) setText(res);
+      });
+    } else {
+      setText(children);
+    }
+    return () => { mounted = false; };
+  }, [children, language, translate]);
+
+  return <>{text}</>;
 }

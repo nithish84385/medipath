@@ -33,15 +33,31 @@ export default function DoctorMatch({ user, onLogout, onSelectDoctor }) {
 
   const detectLocation = async () => {
     setDetectingLoc(true);
-    try {
-      const res = await fetch('https://ipapi.co/json/');
-      const data = await res.json();
-      if (data.city) setUserCity(data.city);
-    } catch(e) { 
-      console.error(e);
-    } finally {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser.");
       setDetectingLoc(false);
+      return;
     }
+
+    navigator.geolocation.getCurrentPosition(async (position) => {
+      try {
+        const { latitude, longitude } = position.coords;
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`);
+        const data = await res.json();
+        const city = data.address.city || data.address.town || data.address.village || data.address.county;
+        if (city) setUserCity(city);
+        else alert("Could not determine city from coordinates.");
+      } catch(e) {
+        console.error(e);
+        alert("Failed to reverse geocode location.");
+      } finally {
+        setDetectingLoc(false);
+      }
+    }, (error) => {
+      console.error(error);
+      alert("Location access denied or unavailable.");
+      setDetectingLoc(false);
+    });
   };
 
   const toggleSymptom = (s) => {

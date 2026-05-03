@@ -39,11 +39,15 @@ export async function parseMedicalImage(base64Image, mimeType) {
     const result = await model.generateContent([prompt, ...imageParts]);
     const textResult = result.response.text().trim();
     
-    // Find the JSON block
-    const jsonMatch = textResult.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("Could not parse JSON from vision response");
-    
-    return JSON.parse(jsonMatch[0]);
+    // Try pure JSON first (common with application/json responseMimeType)
+    try {
+      return JSON.parse(textResult);
+    } catch {
+      // Find the JSON block fallback
+      const jsonMatch = textResult.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error("Could not parse JSON from vision response");
+      return JSON.parse(jsonMatch[0]);
+    }
 
   } catch (error) {
     console.error("Vision OCR Error:", error);

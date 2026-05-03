@@ -1,7 +1,7 @@
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Stethoscope, LogOut, LayoutDashboard, Pill, HeartPulse, History, User, ClipboardList, Globe } from 'lucide-react';
 import StepProgress from './StepProgress';
-import { useLanguage } from '../lib/LanguageContext';
+import { useLanguage, Translate } from '../lib/LanguageContext';
 
 export default function Navbar({ user, currentStep, onLogout }) {
   const navigate = useNavigate();
@@ -41,7 +41,7 @@ export default function Navbar({ user, currentStep, onLogout }) {
         <div className="flex flex-col">
           <span className="font-extrabold text-[17px] tracking-tight text-gray-900 leading-tight">MediPath</span>
           <span className="text-[10px] font-bold tracking-widest uppercase text-gray-400">
-            {isDoctor ? 'Clinical' : isPatient ? 'Patient' : 'Admin'} Portal
+            <Translate>{isDoctor ? 'Clinical' : isPatient ? 'Patient' : 'Admin'}</Translate> <Translate>Portal</Translate>
           </span>
         </div>
       </div>
@@ -61,7 +61,7 @@ export default function Navbar({ user, currentStep, onLogout }) {
                   color: active ? 'var(--primary)' : 'var(--text-muted)',
                 }}>
                 <l.icon size={15} />
-                {l.label}
+                <Translate>{l.label}</Translate>
               </Link>
             );
           })}

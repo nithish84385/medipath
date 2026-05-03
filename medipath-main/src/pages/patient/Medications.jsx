@@ -128,7 +128,7 @@ export default function Medications({ user, onLogout }) {
 
   const totalDoses = todaysDoseStates.length;
   const takenDoses = todaysDoseStates.filter(Boolean).length;
-  const compliance = totalDoses > 0 ? Math.round(takenDoses / totalDoses * 100) : 0;
+  const compliance = totalDoses > 0 ? Math.round(takenDoses / totalDoses * 100) : null;
   const activePresc = prescriptions[0];
   const chatId = activePresc?.queueEntryId || activePresc?.id;
   
@@ -214,16 +214,22 @@ export default function Medications({ user, onLogout }) {
                       🔥 {currentStreak} Day Streak
                     </span>
                   )}
-                  <span className="text-2xl font-black" style={{ color: compliance >= 60 ? 'var(--success)' : 'var(--warning)' }}>
-                    {compliance}%
-                  </span>
+                  {compliance !== null ? (
+                    <span className="text-2xl font-black" style={{ color: compliance >= 60 ? 'var(--success)' : 'var(--warning)' }}>
+                      {compliance}%
+                    </span>
+                  ) : (
+                    <span className="text-sm font-bold text-blue-600 border border-blue-200 bg-blue-50 px-3 py-1 rounded-full">
+                      Awaiting Doctor's Schedule
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="compliance-bar-track">
                 <div className="compliance-bar-fill" style={{ width: `${compliance}%` }}></div>
               </div>
               <div className="text-sm mt-2" style={{ color: 'var(--text-muted)' }}>
-                {takenDoses} of {totalDoses} doses taken
+                {totalDoses > 0 ? `${takenDoses} of ${totalDoses} doses taken` : '0 doses scheduled for today yet'}
               </div>
 
               <div className="mt-5 p-4 rounded-xl" style={{ background: 'rgba(255,255,255,0.6)', border: '1px solid rgba(0,102,204,0.1)' }}>

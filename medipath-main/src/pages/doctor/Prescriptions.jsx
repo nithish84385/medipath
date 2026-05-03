@@ -30,7 +30,7 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 
-const DEFAULT_MED = { name: '', dosage: '', days: '', instruction: 'After meals' };
+const DEFAULT_MED = () => ({ name: '', dosage: '', days: '', instruction: 'After meals', _id: crypto.randomUUID() });
 
 function formatDateLabel(value) {
   if (!value) return 'Pending';
@@ -62,7 +62,7 @@ function formatDateTimeLabel(value) {
 }
 
 function getTimelineItems(queueItem, patientInfo, medications) {
-  if (!queueItem && !patientInfo.email && !patientInfo.name) return [];
+  if (!queueItem && !patientInfo.email && !patientInfo.name && medications.length === 0) return [];
 
   const symptoms = Array.isArray(queueItem?.symptoms)
     ? queueItem.symptoms.join(', ')
@@ -71,12 +71,12 @@ function getTimelineItems(queueItem, patientInfo, medications) {
 
   const items = [
     queueItem && {
-      date: formatDateLabel(queueItem.timestamp),
+      date: queueItem?.timestamp ? formatDateLabel(queueItem.timestamp) : 'Draft started',
       title: 'Patient request received',
-      description: `${queueItem.patientName || patientInfo.name || 'Patient'} entered the care queue with ${symptoms}.`,
+      description: `${queueItem?.patientName || patientInfo.name || 'Anonymous patient'} entered the care queue with ${symptoms}.`,
       type: 'normal',
       label: 'Queued',
-      meta: queueItem.patientEmail || patientInfo.email || '',
+      meta: queueItem?.patientEmail || patientInfo.email || '',
     },
     queueItem && {
       date: queueItem.appointmentTime || formatDateTimeLabel(queueItem.approvedAt),
@@ -128,7 +128,7 @@ export default function Prescriptions({ user, onLogout }) {
   const [sosAlert, setSosAlert] = useState(false);
   const [doctorQueue, setDoctorQueue] = useState([]);
   const [selectedQueueId, setSelectedQueueId] = useState('');
-  const [localMeds, setLocalMeds] = useState([{ ...DEFAULT_MED }]);
+  const [localMeds, setLocalMeds] = useState([DEFAULT_MED()]);
   const [localPatientInfo, setLocalPatientInfo] = useState({
     email: '',
     name: '',
@@ -200,16 +200,17 @@ export default function Prescriptions({ user, onLogout }) {
     return () => unsubscribe();
   }, [user]);
 
-  // Listen for real-time SOS alerts for this doctor
+  // Listen for real-time SOS alerts for this doctor or unassigned generic alerts
   useEffect(() => {
     if (!user?.uid) return;
     const sosQuery = query(
       collection(db, 'sos_alerts'),
-      where('doctorId', '==', user.uid),
       where('resolved', '==', false)
     );
     const unsub = onSnapshot(sosQuery, snap => {
-      setSosAlert(snap.docs.length > 0);
+      const allAlerts = snap.docs.map(d => d.data());
+      const myAlerts = allAlerts.filter(a => !a.doctorId || a.doctorId === user.uid);
+      setSosAlert(myAlerts.length > 0);
     });
     return () => unsub();
   }, [user?.uid]);
@@ -242,7 +243,7 @@ export default function Prescriptions({ user, onLogout }) {
     [localMeds]
   );
 
-  const addMed = () => setLocalMeds((prev) => [...prev, { ...DEFAULT_MED }]);
+  const addMed = () => setLocalMeds((prev) => [...prev, DEFAULT_MED()]);
 
   const updateMed = (index, field, value) => {
     setLocalMeds((prev) =>
@@ -554,7 +555,7 @@ export default function Prescriptions({ user, onLogout }) {
 
               <div className="space-y-10">
                 {localMeds.map((med, index) => (
-                  <div key={index} className="rounded-2xl border border-[var(--border)] bg-[var(--bg-section)] p-6 shadow-sm">
+                  <div key={med._id || index} className="rounded-2xl border border-[var(--border)] bg-[var(--bg-section)] p-6 shadow-sm">
                     <div className="flex items-center justify-between mb-5 border-b border-gray-200 pb-4">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-white font-bold text-gray-900 shadow-sm flex items-center justify-center">
