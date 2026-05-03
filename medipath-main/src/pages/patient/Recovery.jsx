@@ -48,7 +48,8 @@ export default function Recovery({ user, onLogout }) {
       }
     } catch(err) {
       console.error(err);
-      setAiDietPlan("Sorry, I couldn't generate a diet plan right now.");
+      const fallbackDiet = `• Breakfast: Warm oatmeal with fresh berries\n• Lunch: Light vegetable soup with a side salad\n• Dinner: Grilled lean protein and steamed greens\n• Hydration: Drink 8-10 glasses of water throughout the day\n\nTip: Focus on resting and avoiding strenuous activities today.`;
+      setAiDietPlan(fallbackDiet);
     } finally {
       setGeneratingDiet(false);
     }

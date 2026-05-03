@@ -55,16 +55,17 @@ export default function DoctorDashboard({ user, onLogout }) {
     return () => unsub();
   }, [user?.uid]);
 
-  // Live SOS alerts for this doctor
+  // Live SOS alerts for this doctor or unassigned generic alerts
   useEffect(() => {
     if (!user?.uid) return;
     const q = query(
       collection(db, 'sos_alerts'),
-      where('doctorId', '==', user.uid),
       where('resolved', '==', false)
     );
     const unsub = onSnapshot(q, snap => {
-      setSosAlerts(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      const allAlerts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const myAlerts = allAlerts.filter(a => !a.doctorId || a.doctorId === user.uid);
+      setSosAlerts(myAlerts);
     });
     return () => unsub();
   }, [user?.uid]);
