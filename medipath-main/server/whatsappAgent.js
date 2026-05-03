@@ -6,7 +6,7 @@ let model = null;
 function getModel() {
   if (!model) {
     const genAI = new GoogleGenerativeAI(process.env.VITE_GEMINI_API_KEY);
-    model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
   }
   return model;
 }
@@ -85,6 +85,12 @@ export async function handleWhatsAppMessage(from, body, mediaData = null) {
            LANGUAGES.map((l, i) => `${i + 1}. ${l}`).join('\n');
   }
 
+  // Auto-SOS Detection
+  const EMERGENCY_KEYWORDS = ['chest pain', 'heart attack', 'bleeding heavily', 'can\'t breathe', 'suicide', 'kill myself', 'stroke', 'fainting', 'unconscious', 'emergency'];
+  if (EMERGENCY_KEYWORDS.some(kw => lowerBody.includes(kw))) {
+    return `🚨 *EMERGENCY DETECTED* 🚨\n\nBased on your message, you may be experiencing a medical emergency.\n\n*Please seek immediate medical help or call emergency services (e.g., 112 or 911).* \n\nDo not wait for an online consultation.`;
+  }
+
   // 3. Handle Media if present
   if (mediaData) {
     responseText = await handleMediaInput(session, mediaData);
@@ -158,7 +164,10 @@ async function handleMediaInput(session, mediaData) {
       { inlineData: { data: base64Data, mimeType: mediaData.type } }
     ]);
 
-    return `📄 *Media Analysis* (${session.language}):\n\n${result.response.text()}\n\n_Disclaimer: This is AI-generated advice. Please consult a physical doctor for official diagnosis._`;
+    const textResult = result.response.text();
+    session.userData.healthHistory = (session.userData.healthHistory || '') + '\n- ' + textResult;
+    
+    return `📄 *Media Analysis* (${session.language}):\n\n${textResult}\n\n_Disclaimer: This is AI-generated advice. Please consult a physical doctor for official diagnosis._`;
   } catch (error) {
     console.error("Media Processing Error:", error);
     return "I received your media but had trouble analyzing it. Please try sending a clear photo or text message instead.";
@@ -171,12 +180,17 @@ async function generateMedicalResponse(session) {
     User Language: ${session.language}
     Symptoms: ${session.userData.symptoms}
     City: ${session.userData.city}
+    Past Context/Reports: ${session.userData.healthHistory || 'None'}
 
     INSTRUCTIONS:
-    1. Respond in ${session.language}.
-    2. Provide a structured response with Analysis, Top Doctors & Hospitals in ${session.userData.city}, and Recovery advice.
+    1. Respond strictly in ${session.language}.
+    2. Provide a highly structured response containing these exact sections:
+       - *Diagnosis/Triage*: What might be wrong.
+       - *Top Doctors & Hospitals*: Recommend 2-3 specific specialties or hospitals in ${session.userData.city}.
+       - *Diet Plan*: A quick 3-bullet customized diet plan to recover faster.
+       - *Home Care*: Immediate steps they can take at home.
     3. Use bold headers, bullet points, and emojis.
-    4. Ask if they want to set a medicine reminder.
+    4. End by asking if they want to set a medicine reminder.
   `;
 
   try {
@@ -194,6 +208,7 @@ async function handleGeneralChat(session, body) {
     Language: ${session.language}
     User Location: ${session.userData.city}
     User Symptoms: ${session.userData.symptoms}
+    Past Context/Reports: ${session.userData.healthHistory || 'None'}
     
     Current Message: "${body}"
     
