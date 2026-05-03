@@ -14,12 +14,15 @@ async function initDB() {
 
 export async function readDB() {
   await initDB();
-  const data = await fs.readFile(DB_PATH, 'utf-8');
+  let data = await fs.readFile(DB_PATH, 'utf-8');
+  // Strip UTF-8 BOM if present (Windows PowerShell adds it)
+  data = data.replace(/^\uFEFF/, '');
   return JSON.parse(data);
 }
 
 export async function writeDB(data) {
-  await fs.writeFile(DB_PATH, JSON.stringify(data, null, 2));
+  // Write without BOM using explicit utf8 encoding via Buffer
+  await fs.writeFile(DB_PATH, JSON.stringify(data, null, 2), { encoding: 'utf8' });
 }
 
 export async function getSession(from) {

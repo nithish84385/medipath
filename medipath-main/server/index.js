@@ -43,6 +43,9 @@ app.post('/api/whatsapp', async (req, res) => {
     if (!sessionData) {
       sessionData = { from: From, history: [], lastActive: new Date().toISOString() };
     }
+    if (!sessionData.history) {
+      sessionData.history = [];
+    }
     
     sessionData.history.push({ 
       role: 'user', 

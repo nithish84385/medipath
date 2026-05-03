@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/whatsapp",
+      "destination": "/api/whatsapp.js"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

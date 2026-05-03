@@ -31,6 +31,19 @@ export async function handleWhatsAppMessage(from, body, mediaData = null) {
 
   let responseText = "";
 
+  // Handle reset command at any stage
+  const lowerBody = (body || '').toLowerCase().trim();
+  if (['reset', 'restart', 'start over', 'menu'].includes(lowerBody)) {
+    session.step = 'LANGUAGE_SELECTION';
+    session.language = 'English';
+    session.userData = {};
+    await saveSession(from, session);
+    return `🔄 Restarting...\n\n` +
+           `Welcome to *MediPath AI*! 🏥 Your personalized health assistant.\n\n` +
+           `Please select your preferred language:\n\n` +
+           LANGUAGES.map((l, i) => `${i + 1}. ${l}`).join('\n');
+  }
+
   // 3. Handle Media if present
   if (mediaData) {
     responseText = await handleMediaInput(session, mediaData);
@@ -40,16 +53,20 @@ export async function handleWhatsAppMessage(from, body, mediaData = null) {
 
   // 4. State Machine Logic (Text)
   switch (session.step) {
-    case 'LANGUAGE_SELECTION':
+    case 'LANGUAGE_SELECTION': {
       const langIndex = parseInt(body) - 1;
       if (langIndex >= 0 && langIndex < LANGUAGES.length) {
         session.language = LANGUAGES[langIndex].split(' ')[0];
         session.step = 'SYMPTOM_COLLECTION';
-        responseText = `Great! We will continue in *${session.language}*.\n\nHow can I help you today? Please describe your symptoms or ask a health question. (e.g., "I have a severe headache and fever")`;
+        responseText = `✅ Great! We will continue in *${session.language}*.\n\nHow can I help you today? Please describe your symptoms or ask a health question.\n\n_Example: "I have a severe headache and fever"_`;
       } else {
-        responseText = "Invalid selection. Please reply with a number (1-8) to select your language.";
+        // Show menu again for any non-number input (like "hi", "hello")
+        responseText = `Welcome to *MediPath AI*! 🏥\n\nPlease reply with a *number* to select your language:\n\n` +
+                       LANGUAGES.map((l, i) => `${i + 1}. ${l}`).join('\n') +
+                       `\n\n_Type a number from 1-8_`;
       }
       break;
+    }
 
     case 'SYMPTOM_COLLECTION':
       session.userData.symptoms = body;
