@@ -1,10 +1,12 @@
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { Stethoscope, LogOut, LayoutDashboard, Pill, HeartPulse, History, User, ClipboardList } from 'lucide-react';
+import { Stethoscope, LogOut, LayoutDashboard, Pill, HeartPulse, History, User, ClipboardList, Globe } from 'lucide-react';
 import StepProgress from './StepProgress';
+import { useLanguage } from '../lib/LanguageContext';
 
 export default function Navbar({ user, currentStep, onLogout }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { language, setLanguage } = useLanguage();
 
   if (!user) return null;
 
@@ -66,8 +68,22 @@ export default function Navbar({ user, currentStep, onLogout }) {
         </div>
       )}
 
-      {/* Right: User + Logout */}
+      {/* Right: User + Logout + Language */}
       <div className="flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1">
+          <Globe size={14} className="text-gray-400" />
+          <select 
+            className="bg-transparent border-none text-xs font-semibold text-gray-600 focus:ring-0 cursor-pointer"
+            value={language}
+            onChange={e => setLanguage(e.target.value)}
+          >
+            <option value="English">EN</option>
+            <option value="Spanish">ES</option>
+            <option value="Hindi">HI</option>
+            <option value="French">FR</option>
+          </select>
+        </div>
+
         <div className="hidden sm:flex flex-col items-end">
           <div className="text-[13px] font-bold leading-tight text-gray-800">
             {isDoctor ? 'Dr. ' : ''}{user.name}

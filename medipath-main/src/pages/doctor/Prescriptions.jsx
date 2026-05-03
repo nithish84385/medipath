@@ -137,7 +137,27 @@ export default function Prescriptions({ user, onLogout }) {
   });
   const [aiReview, setAiReview] = useState(null);
   const [isReviewing, setIsReviewing] = useState(false);
+  const [templates, setTemplates] = useState([]);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const savedTemplates = localStorage.getItem('medipath_rx_templates');
+    if (savedTemplates) {
+      setTemplates(JSON.parse(savedTemplates));
+    }
+  }, []);
+
+  const handleSaveTemplate = () => {
+    const validMeds = localMeds.filter(m => m.name.trim());
+    if (validMeds.length === 0) return alert('No medications to save.');
+    const name = prompt('Enter a name for this template (e.g. "Standard Viral Fever"):');
+    if (!name) return;
+    
+    const newTemplates = [...templates, { id: Date.now().toString(), name, meds: validMeds }];
+    setTemplates(newTemplates);
+    localStorage.setItem('medipath_rx_templates', JSON.stringify(newTemplates));
+    alert('Template saved!');
+  };
 
   const normalizeDoctorName = (value = '') =>
     value.toLowerCase().replace(/^dr\.?\s+/i, '').replace(/\s+/g, ' ').trim();
@@ -505,9 +525,31 @@ export default function Prescriptions({ user, onLogout }) {
                     <p className="text-sm text-gray-500 mt-1">Add clear dosages to transition smoothly to timings.</p>
                   </div>
                 </div>
-                <button type="button" onClick={addMed} className="btn btn-outline shrink-0">
-                  <Plus className="h-4 w-4" /> Add Element
-                </button>
+                <div className="flex gap-2">
+                  {templates.length > 0 && (
+                    <select 
+                      className="btn btn-outline shrink-0 text-sm py-1 px-2 border-gray-300"
+                      onChange={(e) => {
+                        if(e.target.value) {
+                          const tmpl = templates.find(t => t.id === e.target.value);
+                          if(tmpl) setLocalMeds([...tmpl.meds]);
+                          e.target.value = "";
+                        }
+                      }}
+                    >
+                      <option value="">Load Template...</option>
+                      {templates.map(t => (
+                        <option key={t.id} value={t.id}>{t.name}</option>
+                      ))}
+                    </select>
+                  )}
+                  <button type="button" onClick={handleSaveTemplate} className="btn btn-outline shrink-0" title="Save current medications as a template">
+                    <Save className="h-4 w-4" /> Save Template
+                  </button>
+                  <button type="button" onClick={addMed} className="btn btn-primary shrink-0">
+                    <Plus className="h-4 w-4" /> Add Rx
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-10">

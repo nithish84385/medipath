@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Star, MapPin, Award, Plus, X, Loader2, Stethoscope, Activity, Map, Home, AlertTriangle } from 'lucide-react';
+import { Search, Star, MapPin, Award, Plus, X, Loader2, Stethoscope, Activity, Map, Home, AlertTriangle, Mic, MicOff } from 'lucide-react';
 import Navbar from '../../components/Navbar';
 import SOSButton from '../../components/SOSButton';
 import SOSModal from '../../components/SOSModal';
@@ -21,6 +21,7 @@ export default function DoctorMatch({ user, onLogout, onSelectDoctor }) {
   const [generatingPlan, setGeneratingPlan] = useState(false);
   const [showHomeCareModal, setShowHomeCareModal] = useState(false);
   const [aiError, setAiError] = useState('');
+  const [isListening, setIsListening] = useState(false);
 
   const navigate = useNavigate();
 
@@ -55,11 +56,66 @@ export default function DoctorMatch({ user, onLogout, onSelectDoctor }) {
     }
   };
 
+  const toggleListening = () => {
+    if (isListening) return;
+    
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Voice input is not supported in this browser. Please use Chrome or Safari.");
+      return;
+    }
+    
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = () => setIsListening(true);
+    
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      if (transcript && !selectedSymptoms.includes(transcript.trim())) {
+        setSelectedSymptoms(prev => [...prev, transcript.trim()]);
+      }
+      setIsListening(false);
+    };
+
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error", event.error);
+      setIsListening(false);
+    };
+
+    recognition.onend = () => setIsListening(false);
+
+    recognition.start();
+  };
+
   const searchDoctors = async () => {
     if (!selectedSymptoms.length) return;
+    
+    // Critical Triage / Auto-SOS Check
+    const emergencyKeywords = ['chest pain', 'heart', 'stroke', 'bleeding', 'breath', 'unconscious', 'faint', 'suicide', 'severe pain', 'choking'];
+    const allText = [...selectedSymptoms, customSymptom].join(' ').toLowerCase();
+    
+    const isEmergency = emergencyKeywords.some(keyword => allText.includes(keyword));
+    
+    if (isEmergency) {
+      setShowSOS(true);
+      return;
+    }
+
+    // Check Cache
+    const cacheKey = `medipath_match_${allText}_${userCity}`.replace(/\s+/g, '_');
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) {
+      setMatchedDoctors(JSON.parse(cached));
+      return;
+    }
+
     setSearching(true);
     try {
       const matched = await aiMatchDoctors(selectedSymptoms, customSymptom, userCity);
+      sessionStorage.setItem(cacheKey, JSON.stringify(matched));
       setMatchedDoctors(matched);
     } catch (err) {
       console.error('Match error:', err);
@@ -182,15 +238,27 @@ export default function DoctorMatch({ user, onLogout, onSelectDoctor }) {
             })}
           </div>
 
-          {/* Custom Symptom Input */}
           <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
-            <input
-              value={customSymptom}
-              onChange={e => setCustomSymptom(e.target.value)}
-              placeholder="Add a custom symptom..."
-              onKeyDown={e => e.key === 'Enter' && addCustomSymptom()}
-              style={{ flex: 1, borderRadius: 40 }}
-            />
+            <div style={{ flex: 1, display: 'flex', position: 'relative' }}>
+              <input
+                value={customSymptom}
+                onChange={e => setCustomSymptom(e.target.value)}
+                placeholder="Add a custom symptom or click mic to speak..."
+                onKeyDown={e => e.key === 'Enter' && addCustomSymptom()}
+                style={{ flex: 1, borderRadius: 40, paddingRight: 48 }}
+              />
+              <button 
+                onClick={toggleListening}
+                style={{ 
+                  position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  color: isListening ? 'var(--danger)' : 'var(--text-muted)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}
+              >
+                {isListening ? <Mic className="animate-pulse" size={20} /> : <MicOff size={20} />}
+              </button>
+            </div>
             <button className="btn btn-outline" onClick={addCustomSymptom} style={{ borderRadius: 40, whiteSpace: 'nowrap' }}>
               <Plus size={16} /> Add
             </button>

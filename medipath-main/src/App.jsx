@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { LanguageProvider } from './lib/LanguageContext';
 
 import LoginPage from './pages/LoginPage';
 
@@ -112,85 +113,87 @@ export default function App() {
   };
 
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Public */}
-        <Route path="/" element={user ? <Navigate to={homeRedirect()} replace /> : <LoginPage />} />
+    <LanguageProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Public */}
+          <Route path="/" element={user ? <Navigate to={homeRedirect()} replace /> : <LoginPage />} />
 
-        {/* ── Admin ─────────────────────────────────────────────────── */}
-        <Route path="/admin/queue" element={
-          <RequireAuth requiredRole="admin" user={user} loadingAuth={loadingAuth}>
-            <AdminDashboard user={user} onLogout={handleLogout} />
-          </RequireAuth>
-        } />
+          {/* ── Admin ─────────────────────────────────────────────────── */}
+          <Route path="/admin/queue" element={
+            <RequireAuth requiredRole="admin" user={user} loadingAuth={loadingAuth}>
+              <AdminDashboard user={user} onLogout={handleLogout} />
+            </RequireAuth>
+          } />
 
-        {/* ── Doctor ────────────────────────────────────────────────── */}
-        <Route path="/doctor/dashboard" element={
-          <RequireAuth requiredRole="doctor" user={user} loadingAuth={loadingAuth}>
-            <DoctorDashboard user={user} onLogout={handleLogout} />
-          </RequireAuth>
-        } />
-        <Route path="/doctor/prescribe" element={
-          <RequireAuth requiredRole="doctor" user={user} loadingAuth={loadingAuth}>
-            <Prescriptions user={user} onLogout={handleLogout} />
-          </RequireAuth>
-        } />
-        <Route path="/doctor/timings" element={
-          <RequireAuth requiredRole="doctor" user={user} loadingAuth={loadingAuth}>
-            <Timings user={user} onLogout={handleLogout} />
-          </RequireAuth>
-        } />
-        <Route path="/doctor/diet" element={
-          <RequireAuth requiredRole="doctor" user={user} loadingAuth={loadingAuth}>
-            <DietPlan user={user} onLogout={handleLogout} />
-          </RequireAuth>
-        } />
+          {/* ── Doctor ────────────────────────────────────────────────── */}
+          <Route path="/doctor/dashboard" element={
+            <RequireAuth requiredRole="doctor" user={user} loadingAuth={loadingAuth}>
+              <DoctorDashboard user={user} onLogout={handleLogout} />
+            </RequireAuth>
+          } />
+          <Route path="/doctor/prescribe" element={
+            <RequireAuth requiredRole="doctor" user={user} loadingAuth={loadingAuth}>
+              <Prescriptions user={user} onLogout={handleLogout} />
+            </RequireAuth>
+          } />
+          <Route path="/doctor/timings" element={
+            <RequireAuth requiredRole="doctor" user={user} loadingAuth={loadingAuth}>
+              <Timings user={user} onLogout={handleLogout} />
+            </RequireAuth>
+          } />
+          <Route path="/doctor/diet" element={
+            <RequireAuth requiredRole="doctor" user={user} loadingAuth={loadingAuth}>
+              <DietPlan user={user} onLogout={handleLogout} />
+            </RequireAuth>
+          } />
 
-        {/* ── Patient ───────────────────────────────────────────────── */}
-        <Route path="/patient/dashboard" element={
-          <RequireAuth requiredRole="patient" user={user} loadingAuth={loadingAuth}>
-            <PatientDashboard user={user} onLogout={handleLogout} />
-          </RequireAuth>
-        } />
-        <Route path="/patient/match" element={
-          <RequireAuth requiredRole="patient" user={user} loadingAuth={loadingAuth}>
-            <DoctorMatch user={user} onLogout={handleLogout} onSelectDoctor={() => {}} />
-          </RequireAuth>
-        } />
-        <Route path="/patient/select-slot" element={
-          <RequireAuth requiredRole="patient" user={user} loadingAuth={loadingAuth}>
-            <SlotPreference user={user} onLogout={handleLogout} onSelectDoctor={() => {}} />
-          </RequireAuth>
-        } />
-        <Route path="/patient/queue-status" element={
-          <RequireAuth requiredRole="patient" user={user} loadingAuth={loadingAuth}>
-            <QueueStatus user={user} onLogout={handleLogout} />
-          </RequireAuth>
-        } />
-        <Route path="/patient/medications" element={
-          <RequireAuth requiredRole="patient" user={user} loadingAuth={loadingAuth}>
-            <Medications user={user} onLogout={handleLogout} />
-          </RequireAuth>
-        } />
-        <Route path="/patient/recovery" element={
-          <RequireAuth requiredRole="patient" user={user} loadingAuth={loadingAuth}>
-            <Recovery user={user} onLogout={handleLogout} />
-          </RequireAuth>
-        } />
-        <Route path="/patient/history" element={
-          <RequireAuth requiredRole="patient" user={user} loadingAuth={loadingAuth}>
-            <HealthHistory user={user} onLogout={handleLogout} />
-          </RequireAuth>
-        } />
-        <Route path="/patient/profile" element={
-          <RequireAuth requiredRole="patient" user={user} loadingAuth={loadingAuth}>
-            <ProfilePage user={user} onLogout={handleLogout} />
-          </RequireAuth>
-        } />
+          {/* ── Patient ───────────────────────────────────────────────── */}
+          <Route path="/patient/dashboard" element={
+            <RequireAuth requiredRole="patient" user={user} loadingAuth={loadingAuth}>
+              <PatientDashboard user={user} onLogout={handleLogout} />
+            </RequireAuth>
+          } />
+          <Route path="/patient/match" element={
+            <RequireAuth requiredRole="patient" user={user} loadingAuth={loadingAuth}>
+              <DoctorMatch user={user} onLogout={handleLogout} onSelectDoctor={() => {}} />
+            </RequireAuth>
+          } />
+          <Route path="/patient/select-slot" element={
+            <RequireAuth requiredRole="patient" user={user} loadingAuth={loadingAuth}>
+              <SlotPreference user={user} onLogout={handleLogout} onSelectDoctor={() => {}} />
+            </RequireAuth>
+          } />
+          <Route path="/patient/queue-status" element={
+            <RequireAuth requiredRole="patient" user={user} loadingAuth={loadingAuth}>
+              <QueueStatus user={user} onLogout={handleLogout} />
+            </RequireAuth>
+          } />
+          <Route path="/patient/medications" element={
+            <RequireAuth requiredRole="patient" user={user} loadingAuth={loadingAuth}>
+              <Medications user={user} onLogout={handleLogout} />
+            </RequireAuth>
+          } />
+          <Route path="/patient/recovery" element={
+            <RequireAuth requiredRole="patient" user={user} loadingAuth={loadingAuth}>
+              <Recovery user={user} onLogout={handleLogout} />
+            </RequireAuth>
+          } />
+          <Route path="/patient/history" element={
+            <RequireAuth requiredRole="patient" user={user} loadingAuth={loadingAuth}>
+              <HealthHistory user={user} onLogout={handleLogout} />
+            </RequireAuth>
+          } />
+          <Route path="/patient/profile" element={
+            <RequireAuth requiredRole="patient" user={user} loadingAuth={loadingAuth}>
+              <ProfilePage user={user} onLogout={handleLogout} />
+            </RequireAuth>
+          } />
 
-        {/* Catch-all */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+          {/* Catch-all */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </LanguageProvider>
   );
 }

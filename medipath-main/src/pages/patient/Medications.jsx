@@ -81,6 +81,12 @@ export default function Medications({ user, onLogout }) {
     const updatedMeds = presc.medications.map((m, i) =>
       i === medIndex ? { ...m, taken: m.taken.map((t, ti) => ti === timeIndex ? true : t) } : m
     );
+    
+    // Optimistic UI Update
+    setPrescriptions(prev => prev.map(p => 
+      p.id === prescriptionId ? { ...p, medications: updatedMeds } : p
+    ));
+
     try {
       await updateDoc(doc(db, 'prescriptions', prescriptionId), { medications: updatedMeds });
     } catch (err) { console.error('Error marking dose:', err); }
@@ -125,6 +131,9 @@ export default function Medications({ user, onLogout }) {
   const compliance = totalDoses > 0 ? Math.round(takenDoses / totalDoses * 100) : 0;
   const activePresc = prescriptions[0];
   const chatId = activePresc?.queueEntryId || activePresc?.id;
+  
+  // Gamification Streak
+  const currentStreak = activePresc ? Math.max(0, (activePresc.currentDay || 1) - 1) : 0;
 
   const splitItems = (value) => (value || '').split(/\r?\n|,/).map(s => s.trim()).filter(Boolean);
   const recommendedFoods = splitItems(activePresc?.diet?.foods);
@@ -199,9 +208,16 @@ export default function Medications({ user, onLogout }) {
                   <Activity size={20} color="var(--primary)" />
                   <h3 className="font-bold">Today's Progress</h3>
                 </div>
-                <span className="text-2xl font-black" style={{ color: compliance >= 60 ? 'var(--success)' : 'var(--warning)' }}>
-                  {compliance}%
-                </span>
+                <div className="flex items-center gap-3">
+                  {currentStreak > 0 && (
+                    <span className="badge" style={{ background: '#FFEDD5', color: '#EA580C', fontWeight: 800 }}>
+                      🔥 {currentStreak} Day Streak
+                    </span>
+                  )}
+                  <span className="text-2xl font-black" style={{ color: compliance >= 60 ? 'var(--success)' : 'var(--warning)' }}>
+                    {compliance}%
+                  </span>
+                </div>
               </div>
               <div className="compliance-bar-track">
                 <div className="compliance-bar-fill" style={{ width: `${compliance}%` }}></div>

@@ -1,17 +1,57 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { History, ArrowLeft, Pill, CalendarDays } from 'lucide-react';
-import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { History, ArrowLeft, Pill, CalendarDays, UploadCloud, Loader2 } from 'lucide-react';
+import { collection, onSnapshot, query, where, addDoc } from 'firebase/firestore';
 import Navbar from '../../components/Navbar';
 import SOSButton from '../../components/SOSButton';
 import SOSModal from '../../components/SOSModal';
 import { db } from '../../lib/firebase';
+import { parseMedicalImage } from '../../utils/visionParser';
 
 export default function HealthHistory({ user, onLogout }) {
   const [showSOS, setShowSOS] = useState(false);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isScanning, setIsScanning] = useState(false);
   const navigate = useNavigate();
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsScanning(true);
+    try {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64Data = reader.result.split(',')[1];
+        const parsedData = await parseMedicalImage(base64Data, file.type);
+        
+        if (parsedData) {
+          // Save the OCR result to Firestore as an archived record
+          await addDoc(collection(db, 'prescriptions'), {
+            patientEmail: user?.email.toLowerCase(),
+            patientName: user?.name || 'Patient',
+            doctorName: 'External Record (OCR)',
+            diagnosis: parsedData.diagnosis || 'Unknown',
+            symptoms: parsedData.symptoms || 'Unknown',
+            medications: parsedData.medications || [],
+            status: 'archived',
+            source: 'ocr',
+            createdAt: new Date().toISOString()
+          });
+          alert('Record successfully scanned and saved!');
+        } else {
+          alert('Could not extract information from the image. Please try a clearer photo.');
+        }
+        setIsScanning(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      console.error(err);
+      alert('Error processing document.');
+      setIsScanning(false);
+    }
+  };
 
   useEffect(() => {
     const email = (user?.email || '').toLowerCase().trim();
@@ -41,9 +81,24 @@ export default function HealthHistory({ user, onLogout }) {
           <p>View your previous treatment and medication records</p>
         </div>
 
-        <button className="btn btn-ghost btn-sm mb-4" onClick={() => navigate('/patient/medications')}>
-          <ArrowLeft size={14} /> Back to Medications
-        </button>
+        <div className="flex justify-between items-center mb-4">
+          <button className="btn btn-ghost btn-sm" onClick={() => navigate('/patient/medications')}>
+            <ArrowLeft size={14} /> Back to Medications
+          </button>
+          
+          <div className="relative">
+            <input 
+              type="file" 
+              accept="image/*" 
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              onChange={handleFileUpload}
+              disabled={isScanning}
+            />
+            <button className="btn btn-primary btn-sm" disabled={isScanning}>
+              {isScanning ? <><Loader2 size={14} className="animate-spin mr-1" /> Scanning...</> : <><UploadCloud size={14} className="mr-1" /> Upload Old Record</>}
+            </button>
+          </div>
+        </div>
 
         {loading ? (
           <div className="med-card text-center p-10">Loading history...</div>
