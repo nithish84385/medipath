@@ -16,6 +16,41 @@ const LANGUAGES = [
   "Bengali (বাংলা)", "Marathi (मराठी)", "Kannada (ಕನ್ನಡ)", "Malayalam (മലയാളം)"
 ];
 
+const TRANSLATIONS = {
+  English: {
+    symptoms_prompt: "✅ Great! We will continue in *English*.\n\nHow can I help you today? Please describe your symptoms or ask a health question.\n\n_Example: \"I have a severe headache and fever\"_",
+    city_prompt: "I've noted your symptoms. To find the best doctors and hospitals nearby, please tell me which *City* you are in?"
+  },
+  Hindi: {
+    symptoms_prompt: "✅ बहुत बढ़िया! हम *हिंदी* में जारी रखेंगे।\n\nमैं आज आपकी कैसे मदद कर सकता हूँ? कृपया अपने लक्षण बताएं या स्वास्थ्य संबंधी प्रश्न पूछें।\n\n_उदाहरण: \"मुझे तेज सिरदर्द और बुखार है\"_",
+    city_prompt: "मैंने आपके लक्षण नोट कर लिए हैं। आस-पास के सबसे अच्छे डॉक्टरों और अस्पतालों को खोजने के लिए, कृपया मुझे बताएं कि आप किस *शहर* में हैं?"
+  },
+  Telugu: {
+    symptoms_prompt: "✅ బాగుంది! మనం *తెలుగు*లో కొనసాగుతాము.\n\nఈ రోజు నేను మీకు ఎలా సహాయపడగలను? దయచేసి మీ లక్షణాలను వివరించండి లేదా ఆరోగ్య సంబంధిత ప్రశ్న అడగండి.\n\n_ఉదాహరణ: \"నాకు తీవ్రమైన తలనొప్పి మరియు జ్వరం ఉంది\"_",
+    city_prompt: "నేను మీ లక్షణాలను గమనించాను. సమీపంలోని ఉత్తమ వైద్యులను మరియు ఆసుపత్రులను కనుగొనడానికి, దయచేసి మీరు ఏ *నగరంలో* ఉన్నారో నాకు చెప్పగలరా?"
+  },
+  Tamil: {
+    symptoms_prompt: "✅ சிறப்பு! நாம் *தமிழில்* தொடர்வோம்.\n\nஇன்று நான் உங்களுக்கு எவ்வாறு உதவ முடியும்? தயவுசெய்து உங்கள் அறிகுறிகளை விவரிக்கவும் அல்லது சுகாதார கேள்வியைக் கேட்கவும்.\n\n_உதாரணம்: \"எனக்கு கடுமையான தலைவலி மற்றும் காய்ச்சல் உள்ளது\"_",
+    city_prompt: "உங்கள் அறிகுறிகளை நான் குறித்துக்கொண்டேன். அருகிலுள்ள சிறந்த மருத்துவர்கள் மற்றும் மருத்துவமனைகளைக் கண்டறிய, நீங்கள் எந்த *நகரத்தில்* இருக்கிறீர்கள் என்று தயவுசெய்து கூற முடியுமா?"
+  },
+  Bengali: {
+    symptoms_prompt: "✅ দারুণ! আমরা *বাংলায়* চালিয়ে যাব।\n\nআজ আমি আপনাকে কীভাবে সাহায্য করতে পারি? অনুগ্রহ করে আপনার উপসর্গগুলি বর্ণনা করুন বা একটি স্বাস্থ্য সম্পর্কিত প্রশ্ন জিজ্ঞাসা করুন।\n\n_উদাহরণ: \"আমার প্রচণ্ড মাথাব্যথা এবং জ্বর আছে\"_",
+    city_prompt: "আমি আপনার উপসর্গগুলি নোট করেছি। কাছাকাছি সেরা ডাক্তার এবং হাসপাতালগুলি খুঁজে পেতে, অনুগ্রহ করে আমাকে বলুন আপনি কোন *শহরে* আছেন?"
+  },
+  Marathi: {
+    symptoms_prompt: "✅ उत्तम! आपण *मराठीत* पुढे जाऊ.\n\nआज मी तुम्हाला कशी मदत करू शकतो? कृपया तुमची लक्षणे सांगा किंवा आरोग्यासंबंधी प्रश्न विचारा.\n\n_उदाहरण: \"मला तीव्र डोकेदुखी आणि ताप आहे\"_",
+    city_prompt: "मी तुमची लक्षणे नोंदवली आहेत. जवळचे सर्वोत्तम डॉक्टर आणि रुग्णालये शोधण्यासाठी, कृपया मला सांगा तुम्ही कोणत्या *शहरात* आहात?"
+  },
+  Kannada: {
+    symptoms_prompt: "✅ ಉತ್ತಮ! ನಾವು *ಕನ್ನಡದಲ್ಲಿ* ಮುಂದುವರಿಯುತ್ತೇವೆ.\n\nಇಂದು ನಾನು ನಿಮಗೆ ಹೇಗೆ ಸಹಾಯ ಮಾಡಬಹುದು? ದಯವಿಟ್ಟು ನಿಮ್ಮ ರೋಗಲಕ್ಷಣಗಳನ್ನು ವಿವರಿಸಿ ಅಥವಾ ಆರೋಗ್ಯದ ಪ್ರಶ್ನೆಯನ್ನು ಕೇಳಿ.\n\n_ಉದಾಹರಣೆ: \"ನನಗೆ ತೀವ್ರ ತಲೆನೋವು ಮತ್ತು ಜ್ವರವಿದೆ\"_",
+    city_prompt: "ನಾನು ನಿಮ್ಮ ರೋಗಲಕ್ಷಣಗಳನ್ನು ಗಮನಿಸಿದ್ದೇನೆ. ಹತ್ತಿರದ ಅತ್ಯುತ್ತಮ ವೈದ್ಯರು ಮತ್ತು ಆಸ್ಪತ್ರೆಗಳನ್ನು ಹುಡುಕಲು, ದಯವಿಟ್ಟು ನೀವು ಯಾವ *ನಗರದಲ್ಲಿ* ಇದ್ದೀರಿ ಎಂದು ನನಗೆ ಹೇಳಬಲ್ಲಿರಾ?"
+  },
+  Malayalam: {
+    symptoms_prompt: "✅ കൊള്ളാം! നമുക്ക് *മലയാളത്തിൽ* തുടരാം.\n\nഇന്ന് നിങ്ങളെ സഹായിക്കാൻ എനിക്ക് എങ്ങനെ കഴിയും? ദയവായി നിങ്ങളുടെ രോഗലക്ഷണങ്ങൾ വിശദീകരിക്കുക അല്ലെങ്കിൽ ഒരു ആരോഗ്യ ചോദ്യം ചോദിക്കുക.\n\n_ഉദാഹരണം: \"എനിക്ക് കഠിനമായ തലവേദനയും പനിയും ഉണ്ട്\"_",
+    city_prompt: "നിങ്ങളുടെ രോഗലക്ഷണങ്ങൾ ഞാൻ കുറിച്ചെടുത്തു. അടുത്തുള്ള മികച്ച ഡോക്ടർമാരെയും ആശുപത്രികളെയും കണ്ടെത്താൻ, നിങ്ങൾ ഏത് *നഗരത്തിലാണ്* ഉള്ളതെന്ന് ദയവായി പറയാമോ?"
+  }
+};
+
 export async function handleWhatsAppMessage(from, body, mediaData = null) {
   // 1. Load Session from Local DB
   let session = await getSession(from);
@@ -64,7 +99,8 @@ export async function handleWhatsAppMessage(from, body, mediaData = null) {
       if (langIndex >= 0 && langIndex < LANGUAGES.length) {
         session.language = LANGUAGES[langIndex].split(' ')[0];
         session.step = 'SYMPTOM_COLLECTION';
-        responseText = `✅ Great! We will continue in *${session.language}*.\n\nHow can I help you today? Please describe your symptoms or ask a health question.\n\n_Example: "I have a severe headache and fever"_`;
+        const t = TRANSLATIONS[session.language] || TRANSLATIONS.English;
+        responseText = t.symptoms_prompt;
       } else {
         // Show menu again for any non-number input (like "hi", "hello")
         responseText = `Welcome to *MediPath AI*! 🏥\n\nPlease reply with a *number* to select your language:\n\n` +
@@ -74,11 +110,13 @@ export async function handleWhatsAppMessage(from, body, mediaData = null) {
       break;
     }
 
-    case 'SYMPTOM_COLLECTION':
+    case 'SYMPTOM_COLLECTION': {
       session.userData.symptoms = body;
       session.step = 'LOCATION_COLLECTION';
-      responseText = "I've noted your symptoms. To find the best doctors and hospitals nearby, please tell me which *City* you are in?";
+      const t = TRANSLATIONS[session.language] || TRANSLATIONS.English;
+      responseText = t.city_prompt;
       break;
+    }
 
     case 'LOCATION_COLLECTION':
       session.userData.city = body;
