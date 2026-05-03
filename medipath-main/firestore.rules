@@ -1,0 +1,63 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: check caller's role
+    function callerRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    // Users: can only read/write their own profile
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      // Admin can read all users
+      allow read: if request.auth != null && callerRole() == 'admin';
+    }
+
+    // Prescriptions: patient reads their own, doctor reads/writes theirs, admin reads all
+    match /prescriptions/{prescId} {
+      allow read: if request.auth != null && (
+        resource.data.patientEmail == request.auth.token.email ||
+        resource.data.patientId == request.auth.uid ||
+        resource.data.doctorId == request.auth.uid ||
+        callerRole() == 'admin'
+      );
+      allow create: if request.auth != null && callerRole() in ['doctor', 'admin'];
+      allow update: if request.auth != null && (
+        resource.data.doctorId == request.auth.uid ||
+        resource.data.patientEmail == request.auth.token.email ||
+        resource.data.patientId == request.auth.uid ||
+        callerRole() in ['doctor', 'admin']
+      );
+    }
+
+    // Queue entries: patients create, doctors/admins read and update
+    match /queue_entries/{queueId} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow update: if request.auth != null && (
+        resource.data.patientId == request.auth.uid ||
+        callerRole() in ['admin', 'doctor']
+      );
+    }
+
+    // Chat messages: accessible by signed-in users (scoped by chatId in app)
+    match /chats/{chatId}/messages/{messageId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // SOS alerts: patient creates, doctor/admin reads and resolves
+    match /sos_alerts/{alertId} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null && (
+        resource.data.patientId == request.auth.uid ||
+        resource.data.doctorId == request.auth.uid ||
+        callerRole() == 'admin'
+      );
+      allow update: if request.auth != null && (
+        resource.data.doctorId == request.auth.uid ||
+        callerRole() == 'admin'
+      );
+    }
+  }
+}

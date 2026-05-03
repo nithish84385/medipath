@@ -1,0 +1,653 @@
+{
+  "queues": [
+    {
+      "id": "4Ftivu2brq26zvEmG81h",
+      "timestamp": "2026-04-02T19:48:43.747Z",
+      "doctorId": "D030",
+      "patientName": "patient@example.com",
+      "symptoms": [
+        "Fever"
+      ],
+      "appointmentTime": "10:00 AM",
+      "status": "scheduled",
+      "patientId": "D36xDdEIjdcj4ifQ62gsQjf3B6i2",
+      "doctorName": "Dr. Mohan Das"
+    },
+    {
+      "id": "BBFGFxRan6dC7nsLNqZM",
+      "patientName": "Pranay Biswas",
+      "doctorId": "D010",
+      "timestamp": "2026-04-02T19:32:12.875Z",
+      "symptoms": [
+        "Shortness of Breath"
+      ],
+      "patientId": "4IvYwNvkMiTxl8vjOhDosS8MKfG3",
+      "doctorName": "Dr. Omar Farooq",
+      "status": "scheduled",
+      "appointmentTime": "3:30"
+    },
+    {
+      "id": "OCnASjM79JAlbqpSE0OL",
+      "patientId": "4IvYwNvkMiTxl8vjOhDosS8MKfG3",
+      "doctorName": "Dr. Omar Farooq",
+      "appointmentTime": "11:30  AM",
+      "status": "scheduled",
+      "doctorId": "D010",
+      "timestamp": "2026-04-02T19:44:24.128Z",
+      "patientName": "Pranay Biswas",
+      "symptoms": [
+        "Shortness of Breath"
+      ]
+    },
+    {
+      "id": "WJ0lZ9CzCp2MiHlUYPal",
+      "symptoms": [
+        "Fever"
+      ],
+      "patientName": "Patient 1",
+      "doctorId": "D030",
+      "timestamp": "2026-04-02T19:51:00.208Z",
+      "appointmentTime": "10:00 AM",
+      "status": "scheduled",
+      "doctorName": "Dr. Mohan Das",
+      "patientId": "D36xDdEIjdcj4ifQ62gsQjf3B6i2"
+    },
+    {
+      "id": "Yts7bCtAVonQ1OW9rErK",
+      "status": "waiting",
+      "patientId": "4IvYwNvkMiTxl8vjOhDosS8MKfG3",
+      "doctorName": "Dr. Omar Farooq",
+      "patientEmail": "flash8122@gmail.com",
+      "symptoms": [
+        "Shortness of Breath"
+      ],
+      "patientName": "Pranay Biswas",
+      "doctorId": "D010",
+      "timestamp": "2026-04-03T03:45:28.630Z"
+    },
+    {
+      "id": "dUzA67sPS0sqGV0qekss",
+      "appointmentTime": "2:30",
+      "status": "scheduled",
+      "patientId": "4IvYwNvkMiTxl8vjOhDosS8MKfG3",
+      "doctorName": "Dr. Omar Farooq",
+      "symptoms": [
+        "Shortness of Breath"
+      ],
+      "doctorId": "D010",
+      "timestamp": "2026-04-02T19:34:20.310Z",
+      "patientName": "Pranay Biswas"
+    },
+    {
+      "id": "y8ZnY7VWbzIGxMhKymgW",
+      "status": "scheduled",
+      "appointmentTime": "1:13 am",
+      "patientId": "4IvYwNvkMiTxl8vjOhDosS8MKfG3",
+      "doctorName": "Dr. Deepa Krishnan",
+      "patientName": "Pranay Biswas",
+      "doctorId": "D011",
+      "timestamp": "2026-04-02T19:42:57.067Z",
+      "symptoms": [
+        "Shortness of Breath"
+      ]
+    }
+  ],
+  "presc": [
+    {
+      "id": "9qSFZYchj2uTt6dPiwPJ",
+      "createdAt": "2026-04-02T15:39:32.770Z",
+      "medications": [
+        {
+          "name": "inhaler ",
+          "days": 5,
+          "dosage": "1",
+          "taken": [],
+          "instruction": "Before meals",
+          "times": []
+        }
+      ],
+      "recoveryVideos": [
+        "v010",
+        "v014",
+        "v015",
+        "v016",
+        "v017"
+      ],
+      "diagnosis": "asthama",
+      "patientEmail": "flash8122@gmail.com",
+      "patientName": "pranay",
+      "doctorId": "lWfJ35DjGMOqmYBJYSVOCWOBAyx1",
+      "status": "active",
+      "doctorName": "Pranay biswas",
+      "exercise": "light jogging or running ",
+      "symptoms": "cough",
+      "diet": {
+        "notes": "",
+        "foods": "fuits , vegetables , healthy food ",
+        "avoid": "spicy , fried , oily "
+      }
+    },
+    {
+      "id": "LlRoM8Jw0LHjicABhsZX",
+      "doctorName": "Pranay biswas",
+      "patientName": "pranay",
+      "recoveryVideos": [],
+      "diagnosis": "asthama",
+      "createdAt": "2026-03-24T18:44:58.773Z",
+      "medications": [
+        {
+          "name": "inhaler ",
+          "days": 5,
+          "dosage": "1",
+          "instruction": "Before meals",
+          "taken": [
+            true
+          ],
+          "times": [
+            "14:17"
+          ]
+        }
+      ],
+      "symptoms": "cough",
+      "diet": {
+        "avoid": "",
+        "foods": "",
+        "notes": ""
+      },
+      "exercise": "",
+      "status": "archived",
+      "patientEmail": "flash8122@gmail.com",
+      "doctorId": "lWfJ35DjGMOqmYBJYSVOCWOBAyx1",
+      "currentDay": 6
+    },
+    {
+      "id": "OrKRdnioMdbwFPUqCCzc",
+      "doctorName": "Pranay biswas",
+      "patientName": "pranay biswas",
+      "diagnosis": "asthama",
+      "recoveryVideos": [
+        "v010",
+        "v014",
+        "v015",
+        "v017",
+        "v016"
+      ],
+      "medications": [
+        {
+          "instruction": "After meals",
+          "taken": [
+            true
+          ],
+          "times": [
+            "17:02"
+          ],
+          "name": "vitamins ",
+          "days": 5,
+          "dosage": "1"
+        }
+      ],
+      "createdAt": "2026-03-24T19:30:22.551Z",
+      "diet": {
+        "avoid": "",
+        "notes": "",
+        "foods": ""
+      },
+      "symptoms": "coughing and nausea",
+      "exercise": "",
+      "status": "archived",
+      "doctorId": "lWfJ35DjGMOqmYBJYSVOCWOBAyx1",
+      "patientEmail": "flash8122@gmail.com",
+      "currentDay": 6
+    },
+    {
+      "id": "QEeTmGt6FbJy7c8EKCj3",
+      "patientName": "pranay",
+      "recoveryVideos": [
+        "v010",
+        "v014",
+        "v015",
+        "v016",
+        "v017"
+      ],
+      "diagnosis": "asthama",
+      "createdAt": "2026-03-25T18:40:34.118Z",
+      "medications": [
+        {
+          "dosage": "1",
+          "name": "inhaler ",
+          "days": 5,
+          "instruction": "After meals",
+          "taken": [
+            true
+          ],
+          "times": [
+            "14:13"
+          ]
+        },
+        {
+          "name": "vitamin ",
+          "days": 5,
+          "dosage": "5",
+          "taken": [
+            true
+          ],
+          "instruction": "Before meals",
+          "times": [
+            "15:13"
+          ]
+        }
+      ],
+      "doctorName": "Pranay biswas",
+      "patientEmail": "flash8122@gmail.com",
+      "doctorId": "lWfJ35DjGMOqmYBJYSVOCWOBAyx1",
+      "currentDay": 6,
+      "symptoms": "coughing",
+      "diet": {
+        "avoid": "",
+        "notes": "",
+        "foods": "fruits "
+      },
+      "exercise": "",
+      "status": "archived"
+    },
+    {
+      "id": "YvWVBCIRO1P6UgKBvqyG",
+      "doctorId": "lWfJ35DjGMOqmYBJYSVOCWOBAyx1",
+      "patientEmail": "flash8122@gmail.com",
+      "currentDay": 6,
+      "diet": {
+        "avoid": "",
+        "foods": "",
+        "notes": ""
+      },
+      "symptoms": "coughing and nausea",
+      "exercise": "",
+      "status": "archived",
+      "patientName": "pranay biswas",
+      "diagnosis": "asthama",
+      "recoveryVideos": [
+        "v010",
+        "v014",
+        "v015",
+        "v016",
+        "v017"
+      ],
+      "medications": [
+        {
+          "days": 5,
+          "name": "vitamins ",
+          "dosage": "1",
+          "times": [
+            "04:31"
+          ],
+          "taken": [
+            true
+          ],
+          "instruction": "After meals"
+        },
+        {
+          "times": [
+            "05:32"
+          ],
+          "taken": [
+            true
+          ],
+          "instruction": "Before meals",
+          "dosage": "1",
+          "days": 5,
+          "name": "inhaler "
+        }
+      ],
+      "createdAt": "2026-03-24T19:58:59.463Z",
+      "doctorName": "Pranay biswas"
+    },
+    {
+      "id": "faof3JfrssS0wrdaacnQ",
+      "medications": [
+        {
+          "instruction": "After meals",
+          "taken": [
+            true
+          ],
+          "times": [
+            "12:00"
+          ],
+          "name": "inhaler ",
+          "days": 5,
+          "dosage": "1"
+        },
+        {
+          "instruction": "Before meals",
+          "taken": [
+            true
+          ],
+          "times": [
+            "13:02"
+          ],
+          "dosage": "1",
+          "name": "vitamins ",
+          "days": 2
+        }
+      ],
+      "createdAt": "2026-03-29T17:28:28.217Z",
+      "diagnosis": "asthama",
+      "recoveryVideos": [],
+      "patientName": "mohit",
+      "doctorName": "Pranay biswas",
+      "currentDay": 6,
+      "doctorId": "lWfJ35DjGMOqmYBJYSVOCWOBAyx1",
+      "patientEmail": "flash8122@gmail.com",
+      "status": "active",
+      "exercise": "",
+      "diet": {
+        "avoid": "Spicy food, fried items,",
+        "foods": "Fruits, vegetables, protein, whole grain, plenty of water",
+        "notes": "Try not to jog, run, or any fast-breathing activities"
+      },
+      "symptoms": "cough"
+    },
+    {
+      "id": "feSPyI2iaNuAPNcEd7at",
+      "symptoms": "Shortness of Breath",
+      "doctorName": "Dr. Omar Farooq",
+      "status": "active",
+      "patientEmail": "gamerpranayy@gmail.com",
+      "patientName": "Pranay Biswas",
+      "doctorId": "D010",
+      "diagnosis": "Automated Demo Diagnosis",
+      "createdAt": "2026-04-03T05:53:02.641Z",
+      "medications": [
+        {
+          "dosage": "1 tab",
+          "days": 3,
+          "name": "Demo Paracetamol 500mg",
+          "times": [
+            "09:00",
+            "14:00",
+            "21:00"
+          ],
+          "taken": [
+            false,
+            false,
+            false
+          ],
+          "instruction": "After meals"
+        },
+        {
+          "instruction": "Empty stomach",
+          "taken": [
+            false
+          ],
+          "times": [
+            "08:00"
+          ],
+          "dosage": "1 tab",
+          "name": "Demo Vitamin C",
+          "days": 3
+        }
+      ],
+      "currentDay": 1
+    },
+    {
+      "id": "gX4FQzv7h2X0R9sionYt",
+      "medications": [
+        {
+          "times": [
+            "14:11",
+            "06:14"
+          ],
+          "instruction": "After meals",
+          "taken": [
+            true,
+            true
+          ],
+          "dosage": "2",
+          "days": 7,
+          "name": "inhaler "
+        },
+        {
+          "dosage": "2",
+          "days": 5,
+          "name": "vitamins ",
+          "times": [
+            "05:16"
+          ],
+          "instruction": "Before meals",
+          "taken": [
+            true
+          ]
+        }
+      ],
+      "createdAt": "2026-03-24T18:41:05.669Z",
+      "diagnosis": "asthama",
+      "recoveryVideos": [
+        "v010",
+        "v014",
+        "v015",
+        "v016",
+        "v017"
+      ],
+      "patientName": "pranay biswas",
+      "doctorName": "Pranay biswas",
+      "currentDay": 8,
+      "doctorId": "lWfJ35DjGMOqmYBJYSVOCWOBAyx1",
+      "patientEmail": "flash8122@gmail.com",
+      "status": "archived",
+      "exercise": "- 20 minutes light walk in the morning\n- Avoid exercise for seven days\n- Breathing exercise twice a day",
+      "diet": {
+        "foods": "Fruits and leafy vegetables",
+        "notes": "Notify whenever an emergency and doctor's information will be given to the",
+        "avoid": "Avoid eating fried items and spicy foods\nAvoid sodium content "
+      },
+      "symptoms": "coughing and nausea"
+    },
+    {
+      "id": "jZidEArLB797AqycpluQ",
+      "doctorName": "Pranay biswas",
+      "patientName": "pranay biswas",
+      "recoveryVideos": [
+        "v010",
+        "v014",
+        "v015",
+        "v016",
+        "v017"
+      ],
+      "diagnosis": "asthama",
+      "createdAt": "2026-03-24T19:06:22.701Z",
+      "medications": [
+        {
+          "times": [
+            "15:39"
+          ],
+          "instruction": "After meals",
+          "taken": [
+            true
+          ],
+          "days": 5,
+          "name": "inhaler ",
+          "dosage": "2"
+        }
+      ],
+      "symptoms": "coughing",
+      "diet": {
+        "notes": "",
+        "foods": "",
+        "avoid": ""
+      },
+      "exercise": "",
+      "status": "archived",
+      "patientEmail": "flash8122@gmail.com",
+      "doctorId": "lWfJ35DjGMOqmYBJYSVOCWOBAyx1",
+      "currentDay": 6
+    },
+    {
+      "id": "kYTzY6D6YKJit7aW8P6Y",
+      "status": "archived",
+      "doctorName": "Pranay biswas",
+      "symptoms": "coughing and nausea",
+      "currentDay": 8,
+      "medications": [
+        {
+          "name": "inhaler ",
+          "days": 7,
+          "dosage": "2",
+          "taken": [
+            true
+          ],
+          "instruction": "After meals",
+          "times": [
+            "13:04"
+          ]
+        },
+        {
+          "taken": [
+            true
+          ],
+          "instruction": "Before meals",
+          "times": [
+            "14:04"
+          ],
+          "name": "vitamins ",
+          "days": 5,
+          "dosage": "1"
+        }
+      ],
+      "createdAt": "2026-03-24T18:34:24.692Z",
+      "diagnosis": "asthama",
+      "doctorId": "lWfJ35DjGMOqmYBJYSVOCWOBAyx1",
+      "patientName": "pranay biswas",
+      "patientEmail": "flash8122@gmail.com"
+    },
+    {
+      "id": "p2F9c95uQRLOjpCWPbGu",
+      "diagnosis": "asthama",
+      "recoveryVideos": [
+        "v010",
+        "v014",
+        "v015",
+        "v016",
+        "v017"
+      ],
+      "medications": [
+        {
+          "times": [
+            "15:14"
+          ],
+          "taken": [
+            false
+          ],
+          "instruction": "Before meals",
+          "days": 5,
+          "name": "inhaler ",
+          "dosage": "1"
+        }
+      ],
+      "createdAt": "2026-04-02T19:42:03.268Z",
+      "doctorId": "lWfJ35DjGMOqmYBJYSVOCWOBAyx1",
+      "patientName": "pranay biswas",
+      "patientEmail": "flash8122@gmail.com",
+      "doctorName": "Pranay biswas",
+      "status": "active",
+      "diet": {
+        "avoid": "oilly food ",
+        "foods": "fuits ",
+        "notes": ""
+      },
+      "symptoms": "cough",
+      "exercise": "walking "
+    },
+    {
+      "id": "qmy2tx2CpNMToF67olN6",
+      "patientEmail": "gamerpranayy@gmail.com",
+      "doctorId": "D030",
+      "patientName": "Patient 1",
+      "diagnosis": "Automated Demo Diagnosis",
+      "createdAt": "2026-04-03T03:45:07.573Z",
+      "medications": [
+        {
+          "instruction": "After meals",
+          "taken": [
+            false,
+            false,
+            false
+          ],
+          "times": [
+            "09:00",
+            "14:00",
+            "21:00"
+          ],
+          "name": "Demo Paracetamol 500mg",
+          "days": 3,
+          "dosage": "1 tab"
+        },
+        {
+          "days": 3,
+          "name": "Demo Vitamin C",
+          "dosage": "1 tab",
+          "times": [
+            "08:00"
+          ],
+          "taken": [
+            false
+          ],
+          "instruction": "Empty stomach"
+        }
+      ],
+      "currentDay": 1,
+      "symptoms": "Fever",
+      "doctorName": "Dr. Mohan Das",
+      "status": "active"
+    },
+    {
+      "id": "zLaxh49qSBNqubILRBpS",
+      "currentDay": 6,
+      "doctorId": "qChVRabU1UMGaysZcRQ3r53gIKy2",
+      "patientEmail": "tanushramkosaraju@gmail.com",
+      "status": "archived",
+      "exercise": "",
+      "diet": {
+        "notes": "",
+        "foods": "fruitas",
+        "avoid": ""
+      },
+      "symptoms": "cough",
+      "medications": [
+        {
+          "times": [
+            "12:08"
+          ],
+          "taken": [
+            true
+          ],
+          "instruction": "Before meals",
+          "dosage": "1",
+          "days": 5,
+          "name": "inhaler "
+        },
+        {
+          "dosage": "2",
+          "name": "vitamins",
+          "days": 5,
+          "instruction": "Before meals",
+          "taken": [
+            true
+          ],
+          "times": [
+            "07:08"
+          ]
+        }
+      ],
+      "createdAt": "2026-04-02T04:36:48.955Z",
+      "diagnosis": "asthama",
+      "recoveryVideos": [
+        "v010",
+        "v014",
+        "v015",
+        "v016",
+        "v017"
+      ],
+      "patientName": "tanush",
+      "doctorName": "tanush"
+    }
+  ]
+}
