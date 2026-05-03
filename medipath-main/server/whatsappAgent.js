@@ -2,8 +2,14 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import axios from 'axios';
 import { getSession, saveSession, addReminder } from './localDb.js';
 
-const genAI = new GoogleGenerativeAI(process.env.VITE_GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+let model = null;
+function getModel() {
+  if (!model) {
+    const genAI = new GoogleGenerativeAI(process.env.VITE_GEMINI_API_KEY);
+    model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  }
+  return model;
+}
 
 const LANGUAGES = [
   "English", "Hindi (हिंदी)", "Telugu (తెలుగు)", "Tamil (தமிழ்)", 
@@ -109,7 +115,7 @@ async function handleMediaInput(session, mediaData) {
       ? `You are a medical assistant. Analyze this medical report/image and provide a summary in ${session.language}. Note: This is for informational purposes only.`
       : `Transcribe and summarize this medical voice note in ${session.language}.`;
 
-    const result = await model.generateContent([
+    const result = await getModel().generateContent([
       prompt,
       { inlineData: { data: base64Data, mimeType: mediaData.type } }
     ]);
@@ -136,9 +142,10 @@ async function generateMedicalResponse(session) {
   `;
 
   try {
-    const result = await model.generateContent(prompt);
+    const result = await getModel().generateContent(prompt);
     return result.response.text();
   } catch (error) {
+    console.error("Gemini API Error in generateMedicalResponse:", error);
     return "I'm having trouble connecting to my medical database. Please try again in a moment.";
   }
 }
@@ -157,7 +164,7 @@ async function handleGeneralChat(session, body) {
   `;
 
   try {
-    const result = await model.generateContent(prompt);
+    const result = await getModel().generateContent(prompt);
     let responseText = result.response.text();
 
     const reminderMatch = responseText.match(/\{ "reminder": \{ "medicine": "(.*?)", "time": "(.*?)" \} \}/);
@@ -178,6 +185,7 @@ async function handleGeneralChat(session, body) {
 
     return responseText;
   } catch (error) {
+    console.error("Gemini API Error in handleGeneralChat:", error);
     return "I'm here to help, but I'm having a technical issue. What else can I do for you?";
   }
 }
