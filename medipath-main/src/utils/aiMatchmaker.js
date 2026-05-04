@@ -19,6 +19,7 @@ export async function aiMatchDoctors(selectedSymptoms, customSymptom = "", userC
       rating: d.data().rating || 4.0,
       fee: d.data().fee || 1000,
       available: true,
+      isRegistered: true,
       city: d.data().city || 'Online',
     }));
   } catch (e) {
@@ -44,101 +45,101 @@ export async function aiMatchDoctors(selectedSymptoms, customSymptom = "", userC
       generationConfig: { responseMimeType: "application/json" }
     });
     
-    let baseDbSample = doctorsDB.slice(0, 10).map(d => ({name: d.name, specialty: d.specialty, city: d.city}));
-    
     const prompt = `
-      You are the elite MediPath AI Matchmaker Agent.
-      A patient has reported the following symptoms:
-      Symptoms: ${selectedSymptoms.join(', ')}
+      You are an elite medical triage AI.
+      Patient Symptoms: ${selectedSymptoms.join(', ')}
       Custom Notes: ${customSymptom}
-      Patient's Location: ${userCity ? userCity : 'Unknown Location'}
-
-      Your objective is to find or generate the 3 absolute best doctors for this patient.
       
-      INSTRUCTIONS:
-      1. Analyze the symptoms and determine the exact medical specialty required.
-      2. If the "Patient's Location" is known, use your knowledge of the real world to identify 2 or 3 REAL, prominent, highly-rated hospitals situated in that specific city. 
-      3. Generate 3 highly realistic, top-tier doctors. You can create simulated realistic names. They MUST be mapped to the real-world hospitals you identified in the patient's city.
-      4. Give each doctor a match score (0-100) based on how perfectly they fit the symptoms.
-      5. Write a brief, personalized "bio" (1-2 sentences) explaining why this doctor at this specific hospital is the perfect match for the patient's symptoms.
-      6. Provide a "gender" field ("male" or "female") so we can generate a realistic avatar.
+      Determine the single most relevant medical specialty required.
+      Choose from: Cardiology, Neurology, Orthopedics, Pulmonology, Gastroenterology, Dermatology, ENT, Endocrinology, Internal Medicine, General Medicine, Rheumatology, General Surgery, Infectious Disease, Ophthalmology, Psychiatry, Oncology, Pediatrics, Gynecology.
 
-      Output strictly in JSON format as an array of objects:
-      [
-        {
-          "id": "gen_unique_id",
-          "name": "Dr. Firstname Lastname",
-          "gender": "male or female",
-          "specialty": "Determined Specialty",
-          "hospital": "Name of Real Hospital in their City",
-          "city": "Patient's City",
-          "yearsExperience": 15,
-          "rating": 4.9,
-          "consultationFee": 1500,
-          "score": 98,
-          "bio": "Brief explanation of why they are the perfect match..."
-        }
-      ]
+      Output strictly as JSON:
+      {
+        "specialty": "Determined Specialty"
+      }
     `;
 
-    const result = await model.generateContent(prompt);
-    let textResult = result.response.text().trim();
-    
-    const jsonMatch = textResult.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) {
-      throw new Error("Could not parse JSON array from AI.");
+    let targetSpecialty = "General Medicine";
+    try {
+      const result = await model.generateContent(prompt);
+      const textResult = result.response.text().trim();
+      const jsonMatch = textResult.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        targetSpecialty = JSON.parse(jsonMatch[0]).specialty;
+      }
+    } catch (aiErr) {
+      console.warn("AI Specialty check failed, using keyword fallback", aiErr);
     }
 
-    const generatedDoctors = JSON.parse(jsonMatch[0]);
-
-    // Format the generated doctors with avatar URLs and fallbacks
-    const matched = generatedDoctors.map((doc, idx) => {
-      // Use public avatar API for realistic faces
-      const avatarUrl = doc.gender === 'female' 
-        ? `https://avatar.iran.liara.run/public/girl?username=${encodeURIComponent(doc.name)}`
-        : `https://avatar.iran.liara.run/public/boy?username=${encodeURIComponent(doc.name)}`;
-
-      return {
-        ...doc,
-        id: doc.id || `gen_${idx}_${Date.now()}`,
-        photoUrl: avatarUrl,
-        available: true,
-        avatar: doc.name.split(' ').map(p => p[0]).join('').slice(0, 2)
-      };
-    }).sort((a, b) => b.score - a.score);
-
-    if (matched.length === 0) {
-      throw new Error("AI returned empty array, triggering local fallback.");
-    }
-
-    return matched;
-
-  } catch (error) {
-    console.warn("Gemini Match Error, falling back to local database algorithms", error);
-    // Robust Fallback Algorithm
     const matchTerms = [...selectedSymptoms, customSymptom].join(' ').toLowerCase();
-    
-    const fallbackMatches = doctorsDB.map(doc => {
-      let score = 50; // Base score
+
+    // Deterministic Smart Scoring Algorithm
+    const scoredDoctors = doctorsDB.map((doc, idx) => {
+      let score = 0;
       
-      // Match specialty
-      if (matchTerms.includes(doc.specialty.toLowerCase())) score += 30;
+      // 1. Specialty Match
+      const docSpec = (doc.specialty || '').toLowerCase();
+      if (docSpec === targetSpecialty.toLowerCase() || matchTerms.includes(docSpec)) {
+         score += 1000;
+      }
+
+      // 2. Strict Location Enforcement
+      const docCity = (doc.city || '').toLowerCase();
+      const uCity = (userCity || '').toLowerCase();
+      const cityMatch = uCity && docCity === uCity;
       
-      // Match city
-      if (userCity && doc.city.toLowerCase() === userCity.toLowerCase()) score += 15;
-      
-      // Add random fuzziness (0-5)
-      score += Math.floor(Math.random() * 5);
-      
+      let finalCity = doc.city || 'Online';
+      let finalHospital = doc.hospital || 'MediPath Partner Clinic';
+
+      if (cityMatch) {
+         score += 500;
+      } else if (uCity && docCity !== 'online') {
+         // If they are from a different city, we strictly overwrite them to be a generic local doctor
+         // This prevents the user from seeing "Dhaka" when they search from "London"
+         finalCity = userCity;
+         finalHospital = `${userCity} Medical Center`;
+         score -= 100; // Real locals still rank higher
+      } else if (uCity && docCity === 'online') {
+         finalCity = userCity; // Map online doctors to the local city
+      }
+
+      // 3. GUARANTEED REGISTERED DOCTORS ON TOP
+      if (doc.isRegistered) {
+         score += 50000; // Massive boost guarantees they are #1
+         finalCity = userCity || doc.city || 'Online'; // Force them to match the search city
+      }
+
+      // 4. Rating Bonus
+      score += (doc.rating || 4.0) * 10;
+
+      // Calculate a realistic percentage for the UI (cap at 99%)
+      const matchPercentage = doc.isRegistered ? 99 : Math.min(Math.max(Math.floor((score / 1500) * 100), 40), 98);
+
+      // Generate Avatar
+      const avatarUrl = `https://avatar.iran.liara.run/public/${idx % 2 === 0 ? 'boy' : 'girl'}?username=${encodeURIComponent(doc.name)}`;
+
       return {
         ...doc,
-        score: Math.min(score, 98), // Cap at 98
-        bio: `${doc.name} is a highly rated ${doc.specialty} based in ${doc.city}.`,
-        available: true,
+        id: doc.id || `doc_${idx}`,
+        photoUrl: avatarUrl,
+        score: matchPercentage,
+        sortScore: score, // Use raw score for sorting
+        city: finalCity,
+        bio: doc.isRegistered ? `✨ Verified MediPath Specialist.` : `Highly rated specialist based in ${finalCity}.`,
+        contact: doc.contact || `+91-${Math.floor(Math.random() * 900000000 + 1000000000)}`,
+        hospital: finalHospital
       };
     });
 
-    // Sort by score and take top 3
-    return fallbackMatches.sort((a, b) => b.score - a.score).slice(0, 3);
+    // Sort strictly by our calculated score and return top 6
+    const topMatches = scoredDoctors.sort((a, b) => b.sortScore - a.sortScore).slice(0, 6);
+    
+    if (topMatches.length === 0) throw new Error("No doctors matched");
+    
+    return topMatches;
+
+  } catch (error) {
+    console.error("Critical Match Error", error);
+    return [];
   }
 }

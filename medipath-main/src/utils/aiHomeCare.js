@@ -89,7 +89,83 @@ export async function generateHomeCarePlan(patientEmail, patientName, symptoms, 
     return { success: true, prescriptionId: docRef.id };
 
   } catch (error) {
-    console.error("AI Home Care Engine Error:", error);
-    return { success: false, reason: "System Error: " + error.message };
+    console.warn("AI Home Care Engine Error, falling back to local deterministic engine:", error);
+    
+    // Deterministic fallback plan
+    const allSymptoms = `${symptoms.join(' ')} ${customSymptom}`.toLowerCase();
+    
+    // Generic Safety Check Fallback
+    const emergencyKeywords = ['chest pain', 'heart', 'stroke', 'bleeding', 'breath', 'unconscious', 'faint', 'suicide', 'severe pain', 'choking', 'seizure'];
+    const isEmergency = emergencyKeywords.some(keyword => allSymptoms.includes(keyword));
+    
+    if (isEmergency) {
+      return { success: false, reason: "Your symptoms appear too severe for automated home-care. Please seek immediate medical attention or book a specialist." };
+    }
+    
+    // Build generic plan
+    const medications = [];
+    let diagnosis = "Mild General Discomfort";
+    let foods = "Light, easily digestible foods like soup, porridge, or toast.";
+    let avoid = "Heavy, greasy, or highly processed foods.";
+    let notes = "Rest well and stay hydrated.";
+    
+    if (allSymptoms.includes('fever') || allSymptoms.includes('headache')) {
+      diagnosis = "Viral Fever / Headache";
+      medications.push({ name: "Paracetamol 500mg", instruction: "After meals, if fever/pain persists", days: 3, dosage: "1 tablet" });
+    }
+    if (allSymptoms.includes('cough') || allSymptoms.includes('throat')) {
+      diagnosis = "Respiratory Infection / Cough";
+      medications.push({ name: "Cough Syrup (e.g., Benadryl)", instruction: "Before bed", days: 3, dosage: "10ml" });
+      notes = "Drink warm fluids and gargle with salt water.";
+    }
+    if (allSymptoms.includes('stomach') || allSymptoms.includes('nausea') || allSymptoms.includes('diarrhea') || allSymptoms.includes('vomit')) {
+      diagnosis = "Gastrointestinal Upset";
+      medications.push({ name: "Antacid (e.g., Gelusil)", instruction: "After meals", days: 2, dosage: "10ml" });
+      foods = "BRAT Diet: Bananas, Rice, Applesauce, Toast.";
+      avoid = "Spicy food, dairy, and caffeine.";
+    }
+    if (allSymptoms.includes('muscle') || allSymptoms.includes('body ache') || allSymptoms.includes('pain')) {
+      diagnosis = "Muscle Aches / General Pain";
+      medications.push({ name: "Ibuprofen 400mg", instruction: "After meals, for body pain", days: 2, dosage: "1 tablet" });
+    }
+    
+    if (medications.length === 0) {
+       medications.push({ name: "Multivitamin Supplement", instruction: "After breakfast", days: 5, dosage: "1 tablet" });
+    }
+    
+    // Prepare standard prescription object for Firestore
+    const prescriptionData = {
+      doctorId: "ai_agent",
+      doctorName: "MediPath Auto-Care System",
+      doctorSpecialty: "General Wellness",
+      patientEmail,
+      patientName,
+      diagnosis,
+      symptoms: `${symptoms.join(', ')} ${customSymptom}`.trim(),
+      queueEntryId: "autonomous_home_care",
+      medications: medications.map(med => ({
+        name: med.name,
+        dosage: med.dosage,
+        days: parseInt(med.days, 10) || 1,
+        instruction: med.instruction,
+        times: ["09:00 AM", "09:00 PM"],
+        taken: [false, false]
+      })),
+      diet: {
+         foods,
+         avoid,
+         notes
+      },
+      createdAt: new Date().toISOString(),
+      status: 'active',
+      isAiGenerated: true
+    };
+
+    try {
+       const docRef = await addDoc(collection(db, 'prescriptions'), prescriptionData);
+       return { success: true, prescriptionId: docRef.id };
+    } catch(dbErr) {
+       return { success: false, reason: "Database error: " + dbErr.message };
+    }
   }
 }

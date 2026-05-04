@@ -117,11 +117,11 @@ export default function DoctorMatch({ user, onLogout, onSelectDoctor }) {
     
     if (isEmergency) {
       setShowSOS(true);
-      return;
+      // We will no longer return here, so that doctor search continues in the background!
     }
 
     // Check Cache
-    const cacheKey = `medipath_match_${allText}_${userCity}`.replace(/\s+/g, '_');
+    const cacheKey = `medipath_match_v6_${allText}_${userCity}`.replace(/\s+/g, '_');
     const cached = sessionStorage.getItem(cacheKey);
     if (cached) {
       setMatchedDoctors(JSON.parse(cached));
@@ -426,7 +426,6 @@ export default function DoctorMatch({ user, onLogout, onSelectDoctor }) {
                       </div>
                       <div style={{ color: 'var(--primary-strong)', fontWeight: 700, fontSize: '0.9rem', marginBottom: 12 }}>
                         {doc.specialty}
-                        {doc.hospital && <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}> • {doc.hospital}</span>}
                       </div>
                       {doc.bio && (
                         <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.5, marginBottom: 16, maxWidth: '540px' }}>
@@ -434,6 +433,16 @@ export default function DoctorMatch({ user, onLogout, onSelectDoctor }) {
                         </div>
                       )}
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: 14 }}>
+                        {doc.hospital && (
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, color: 'var(--text-primary)' }}>
+                            🏥 {doc.hospital}
+                          </span>
+                        )}
+                        {doc.contact && (
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--primary)' }}>
+                            📞 {doc.contact}
+                          </span>
+                        )}
                         <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           <MapPin size={14} /> {doc.city}
                         </span>
