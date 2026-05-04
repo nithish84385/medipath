@@ -45,35 +45,99 @@ export default function Medications({ user, onLogout }) {
     return () => unsubscribe();
   }, [user?.email]);
 
-  // Medication reminders via browser Notification API
+  // In-app visible reminder state (works on tablets where Notification API is blocked)
+  const [activeReminders, setActiveReminders] = useState([]);
+  const [dismissedReminders, setDismissedReminders] = useState(new Set());
+  const audioRef = useRef(null);
+
+  // Medication reminders — in-app banner + browser Notification fallback
   useEffect(() => {
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
     }
+
     const interval = setInterval(() => {
-      if ('Notification' in window && Notification.permission === 'granted' && prescriptions.length > 0) {
-        const now = new Date();
-        const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-        const today = now.toDateString();
-        prescriptions.forEach(p => {
-          p.medications.forEach((med, mi) => {
-            if (med.times && med.taken) {
-              med.times.forEach((time, ti) => {
-                const key = `${p.id}-${mi}-${ti}-${today}`;
-                if (time === currentTime && !med.taken[ti] && !notifiedSet.current.has(key)) {
-                  notifiedSet.current.add(key);
-                  new Notification('MediPath: Time for your medicine', {
-                    body: `Take ${med.dosage} of ${med.name} (${med.instruction}).`,
+      if (prescriptions.length === 0) return;
+
+      const now = new Date();
+      const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+      const today = now.toDateString();
+      const pending = [];
+
+      prescriptions.forEach(p => {
+        const currentDay = p.currentDay || 1;
+        p.medications.forEach((med, mi) => {
+          if (med.times && med.taken) {
+            const maxDays = parseInt(med.days) || 1;
+            if (currentDay > maxDays) return; // course finished for this med
+
+            med.times.forEach((time, ti) => {
+              const key = `${p.id}-${mi}-${ti}-${today}`;
+              if (!med.taken[ti] && !dismissedReminders.has(key)) {
+                // Check if this time is now or in the past (due today)
+                const [tH, tM] = time.split(':').map(Number);
+                const [nH, nM] = [now.getHours(), now.getMinutes()];
+                const timeDiffMin = (nH * 60 + nM) - (tH * 60 + tM);
+
+                if (timeDiffMin >= 0 && timeDiffMin <= 30) {
+                  // Due right now or within last 30 min
+                  pending.push({
+                    key,
+                    prescriptionId: p.id,
+                    medIndex: mi,
+                    timeIndex: ti,
+                    medName: med.name,
+                    dosage: med.dosage,
+                    instruction: med.instruction,
+                    time,
+                    isNow: timeDiffMin <= 1,
                   });
+
+                  // Browser notification (if supported)
+                  if (timeDiffMin <= 1 && !notifiedSet.current.has(key)) {
+                    notifiedSet.current.add(key);
+                    if ('Notification' in window && Notification.permission === 'granted') {
+                      new Notification('MediPath: Time for your medicine', {
+                        body: `Take ${med.dosage} of ${med.name} (${med.instruction}).`,
+                        icon: '/pwa-192x192.png',
+                      });
+                    }
+                    // Play audio chime
+                    try {
+                      if (audioRef.current) {
+                        audioRef.current.currentTime = 0;
+                        audioRef.current.play().catch(() => {});
+                      }
+                    } catch(e) { /* audio blocked on some browsers */ }
+                  }
                 }
-              });
-            }
-          });
+              }
+            });
+          }
         });
-      }
-    }, 30000);
+      });
+
+      setActiveReminders(pending);
+    }, 15000); // Check every 15 seconds for tablet responsiveness
+
     return () => clearInterval(interval);
-  }, [prescriptions]);
+  }, [prescriptions, dismissedReminders]);
+
+  const dismissReminder = (key) => {
+    setDismissedReminders(prev => new Set([...prev, key]));
+  };
+
+  const snoozeReminder = (key) => {
+    // Dismiss now, it will reappear on the next check cycle
+    dismissReminder(key);
+    setTimeout(() => {
+      setDismissedReminders(prev => {
+        const next = new Set([...prev]);
+        next.delete(key);
+        return next;
+      });
+    }, 5 * 60 * 1000); // Snooze for 5 minutes
+  };
 
   const markTaken = async (prescriptionId, medIndex, timeIndex) => {
     const presc = prescriptions.find(p => p.id === prescriptionId);
@@ -182,6 +246,118 @@ export default function Medications({ user, onLogout }) {
             </div>
           </div>
         </div>
+
+        {/* 🔔 Today's Medication Schedule — Always Visible */}
+        {!loading && prescriptions.length > 0 && (() => {
+          const now = new Date();
+          const nH = now.getHours(), nM = now.getMinutes();
+          const nowMin = nH * 60 + nM;
+          const presc = prescriptions[0];
+          const allSlots = [];
+
+          presc.medications.forEach((med, mi) => {
+            if (med.times && med.times.length > 0) {
+              med.times.forEach((time, ti) => {
+                const [tH, tM] = (time || '').split(':').map(Number);
+                const timeMin = (tH || 0) * 60 + (tM || 0);
+                const taken = med.taken?.[ti] || false;
+                const diffMin = nowMin - timeMin;
+
+                let status = 'upcoming';
+                if (taken) status = 'taken';
+                else if (diffMin >= 0 && diffMin <= 30) status = 'due';
+                else if (diffMin > 30) status = 'missed';
+
+                allSlots.push({
+                  key: `${presc.id}-${mi}-${ti}`,
+                  prescriptionId: presc.id,
+                  medIndex: mi,
+                  timeIndex: ti,
+                  medName: med.name,
+                  dosage: med.dosage,
+                  instruction: med.instruction,
+                  time: time || '--:--',
+                  timeMin,
+                  status,
+                  taken,
+                });
+              });
+            }
+          });
+
+          allSlots.sort((a, b) => a.timeMin - b.timeMin);
+
+          if (allSlots.length === 0) return null;
+
+          const statusColors = {
+            taken:    { bg: 'var(--success-light)', border: 'var(--success)', text: 'var(--success)', icon: '✅', label: 'Taken' },
+            due:      { bg: 'var(--danger-light)',  border: 'var(--danger)',  text: 'var(--danger)',  icon: '⏰', label: 'Take Now!' },
+            missed:   { bg: '#FFF7ED',              border: '#F97316',        text: '#EA580C',        icon: '⚠️', label: 'Missed' },
+            upcoming: { bg: 'var(--bg-section)',     border: 'var(--border)',  text: 'var(--text-secondary)', icon: '🕐', label: 'Upcoming' },
+          };
+
+          return (
+            <div className="med-card card-pad-md mb-6 fade-in" style={{ borderLeft: '4px solid var(--primary)' }}>
+              <div className="card-head mb-5">
+                <div className="card-head-left">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: 'var(--primary-light)' }}>
+                    <Bell size={22} color="var(--primary)" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold">Today's Schedule</h2>
+                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                      {allSlots.filter(s => s.status === 'taken').length}/{allSlots.length} doses completed
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                {allSlots.map(slot => {
+                  const c = statusColors[slot.status];
+                  return (
+                    <div key={slot.key}
+                      className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-4 rounded-xl transition-all"
+                      style={{
+                        background: c.bg,
+                        border: `1.5px solid ${c.border}`,
+                        animation: slot.status === 'due' ? 'pulse-ring 2.5s ease-out infinite' : 'none',
+                      }}>
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="text-2xl flex-shrink-0">{c.icon}</div>
+                        <div className="min-w-0 flex-1">
+                          <div className="font-bold text-sm" style={{ color: c.text }}>{slot.medName} — {slot.dosage}</div>
+                          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                            {slot.instruction} · {slot.time}
+                          </div>
+                        </div>
+                        <span className="text-xs font-bold px-3 py-1 rounded-full flex-shrink-0"
+                          style={{ background: `${c.border}20`, color: c.text }}>
+                          {c.label}
+                        </span>
+                      </div>
+
+                      {!slot.taken && (
+                        <div className="flex gap-2 w-full sm:w-auto flex-shrink-0">
+                          <button className="btn btn-sm flex-1 sm:flex-none font-bold"
+                            style={{ background: slot.status === 'due' ? 'var(--danger)' : 'var(--primary)', color: 'white', minHeight: '40px' }}
+                            onClick={() => markTaken(slot.prescriptionId, slot.medIndex, slot.timeIndex)}>
+                            <CheckCircle2 size={14} /> Mark Taken
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Hidden audio chime for tablet alerts */}
+        <audio ref={audioRef} preload="auto"
+          src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbsGczIj+r2teleC0qeli60NssCAAFH2qo3fJ6HRYKK3W45OJ0EA0OKIOz4d9xDAoNJnu23+RyDgkNHXCw2eFzDAkMG2us1N1vCwkLGmes0NlsCgoJGGSqztdqCQkJF2KozdVpCAkIF2GnzNRnCAkHFmCmzNNnBwgHFV+ly9JmBwgHFV+lytFmBggGFF6ky9FmBggGFF6ky9FlBgcGFF6ky9Fl" />
+
 
         {loading ? (
           <div className="flex items-center justify-center p-12">

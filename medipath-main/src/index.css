@@ -1,9 +1,7 @@
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
-
-/* Geist Font — Modern UI typeface */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 /* ═══════════════════════════════════════════════════
    MediPath — Premium SaaS Design System
@@ -248,6 +246,34 @@ input:focus, textarea:focus, select:focus {
 
 input::placeholder, textarea::placeholder {
   color: var(--text-muted);
+}
+
+/* Time inputs — preserve native picker on mobile/tablet */
+input[type="time"] {
+  width: auto;
+  min-width: 140px;
+  backdrop-filter: none;
+  background: #FFFFFF;
+  cursor: pointer;
+  -webkit-appearance: none;
+}
+
+input[type="time"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  padding: 4px;
+  opacity: 0.6;
+}
+
+input[type="time"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* Checkbox inputs — don't apply global input styles */
+input[type="checkbox"] {
+  width: auto;
+  padding: 0;
+  backdrop-filter: none;
+  border-radius: 4px;
 }
 
 select {

@@ -84,16 +84,22 @@ export default function Timings({ user, onLogout }) {
         <div className="flex flex-col gap-8 mb-8">
           {meds.filter(m => m.name).map((med, i) => {
             const times = timings[med.name] || [''];
+            const presetTimes = [
+              { label: '🌅 Morning', value: '08:00' },
+              { label: '☀️ Afternoon', value: '13:00' },
+              { label: '🌇 Evening', value: '18:00' },
+              { label: '🌙 Night', value: '21:00' },
+            ];
             return (
               <div key={i} className="med-card card-pad-md fade-in" style={{ borderLeft: '4px solid var(--primary)', animationDelay: `${i * 0.1}s` }}>
-                <div className="card-head mb-4">
+                <div className="card-head mb-5">
                   <div className="card-head-left">
-                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'var(--primary-light)' }}>
-                      <Pill size={18} color="var(--primary)" />
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: 'var(--primary-light)' }}>
+                      <Pill size={20} color="var(--primary)" />
                     </div>
                     <div>
-                      <div className="font-bold text-base">{med.name}</div>
-                      <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                      <div className="font-bold text-lg">{med.name}</div>
+                      <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
                         {med.instruction} · {med.days} days · {med.dosage}
                       </div>
                     </div>
@@ -102,17 +108,45 @@ export default function Timings({ user, onLogout }) {
                     <Plus size={14} /> Add Time
                   </button>
                 </div>
+
+                {/* Quick preset buttons for tablet */}
+                <div className="flex gap-2 flex-wrap mb-4">
+                  {presetTimes.map(pt => (
+                    <button key={pt.value} type="button"
+                      className="btn btn-sm"
+                      style={{
+                        background: times.includes(pt.value) ? 'var(--primary-light)' : 'var(--bg-section)',
+                        color: times.includes(pt.value) ? 'var(--primary)' : 'var(--text-secondary)',
+                        border: `1px solid ${times.includes(pt.value) ? 'var(--primary)' : 'var(--border)'}`,
+                        padding: '10px 16px',
+                        fontSize: '0.8125rem',
+                      }}
+                      onClick={() => {
+                        if (times.includes(pt.value)) {
+                          setMedTimes(med.name, times.filter(t => t !== pt.value));
+                        } else {
+                          const newTimes = times[0] === '' ? [pt.value] : [...times, pt.value];
+                          setMedTimes(med.name, newTimes);
+                        }
+                      }}>
+                      {pt.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Custom time inputs */}
                 <div className="flex gap-3 flex-wrap">
                   {times.map((t, ti) => (
                     <div key={ti} className="flex items-center gap-2">
                       <div className="relative">
-                        <Clock size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                        <Clock size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', zIndex: 1 }} />
                         <input type="time" value={t}
                           onChange={e => { const n = [...times]; n[ti] = e.target.value; setMedTimes(med.name, n); }}
-                          style={{ paddingLeft: 36, width: 'min(160px, 42vw)' }} />
+                          style={{ paddingLeft: 36, minWidth: '160px', minHeight: '48px', fontSize: '1rem' }} />
                       </div>
                       {times.length > 1 && (
-                        <button className="btn btn-sm btn-soft-danger" onClick={() => setMedTimes(med.name, times.filter((_, xi) => xi !== ti))}>
+                        <button className="btn btn-sm btn-soft-danger" style={{ minHeight: '48px' }}
+                          onClick={() => setMedTimes(med.name, times.filter((_, xi) => xi !== ti))}>
                           <X size={14} />
                         </button>
                       )}
@@ -120,10 +154,10 @@ export default function Timings({ user, onLogout }) {
                   ))}
                 </div>
                 {times.filter(Boolean).length > 0 && (
-                  <div className="mt-3 p-3 rounded-lg text-xs flex items-center gap-2"
+                  <div className="mt-4 p-4 rounded-xl text-sm flex items-center gap-2"
                     style={{ background: 'var(--success-light)', color: 'var(--success)', border: '1px solid rgba(40,167,69,0.15)' }}>
-                    <Bell size={14} />
-                    {times.filter(Boolean).length} reminder{times.filter(Boolean).length > 1 ? 's' : ''} set — patient will get notifications
+                    <Bell size={16} />
+                    <strong>{times.filter(Boolean).length}</strong> reminder{times.filter(Boolean).length > 1 ? 's' : ''} set — patient will get in-app + notification alerts
                   </div>
                 )}
               </div>
