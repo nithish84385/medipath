@@ -18,7 +18,7 @@ export function LanguageProvider({ children }) {
     if (cache[cacheKey]) return cache[cacheKey];
 
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+      const model = genAI.getGenerativeModel({ model: "gemini-3.8-flash" });
       const prompt = `Translate the following medical text into ${targetLang}. Return ONLY the translated text, nothing else. Text: "${text}"`;
       const result = await model.generateContent(prompt);
       const translated = result.response.text().trim();

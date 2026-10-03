@@ -20,7 +20,7 @@ export default function TriageAgentUI({ triggerSOS }) {
     if (isOpen && !chatSessionRef.current) {
       try {
         const model = genAI.getGenerativeModel({
-          model: 'gemini-2.5-flash',
+          model: 'gemini-3.8-flash',
           systemInstruction: "You are the MediPath Emergency Triage Agent. You are a helpful, very brief, and professional AI medical assistant. Ask the user for their symptoms. If the symptoms are mild/moderate, call the navigate_to_doctor tool. If the symptoms indicate a life-threatening emergency (e.g. chest pain, heart attack, unable to breathe, massive bleeding), you MUST call the trigger_emergency_sos tool.",
           tools: [{
             functionDeclarations: [

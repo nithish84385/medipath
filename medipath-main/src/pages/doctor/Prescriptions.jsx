@@ -261,7 +261,7 @@ export default function Prescriptions({ user, onLogout }) {
     setIsReviewing(true);
     setAiReview(null);
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+      const model = genAI.getGenerativeModel({ model: "gemini-3.8-flash" });
       const prompt = `You are an expert Clinical Scribe Agent assisting a doctor. 
       Review this prescription for obvious drug interactions, dosage warnings, or contraindications.
       Patient Diagnosis: ${localPatientInfo.diagnosis || 'Unknown'}

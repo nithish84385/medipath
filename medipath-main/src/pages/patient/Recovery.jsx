@@ -31,7 +31,7 @@ export default function Recovery({ user, onLogout }) {
     if (!prescription) return;
     setGeneratingDiet(true);
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+      const model = genAI.getGenerativeModel({ model: "gemini-3.8-flash" });
       const prompt = `You are a Diet & Lifestyle Coach Agent. 
       The patient has been diagnosed with: ${prescription.diagnosis || 'Unknown condition'}
       Symptoms: ${prescription.symptoms || 'Unknown'}

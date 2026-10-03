@@ -208,7 +208,7 @@ export default function Medications({ user, onLogout }) {
     if (!activePresc) return;
     setGeneratingFeedback(true);
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+      const model = genAI.getGenerativeModel({ model: "gemini-3.8-flash" });
       const prompt = `You are a Patient Success Agent. The patient has ${compliance}% compliance today on their medication for ${activePresc.diagnosis}. 
       Write a short, encouraging 2-sentence message to motivate them. If compliance is low, gently remind them of the importance of the meds. If high, praise them!`;
       const result = await model.generateContent(prompt);
